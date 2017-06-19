@@ -147,14 +147,6 @@ class WunravEmbedYoutubeLiveStreaming
         );
 
         add_settings_field(
-            'alertToggle',
-            'Enable Alert',
-            array($this, 'alertToggle_callback'),
-            $this->pluginSlug, // page
-            $this->pluginSlug . '-settings-production' // section
-        );
-
-        add_settings_field(
             'channelID',
             'Channel ID',
             array($this, 'channelID_callback'),
@@ -211,6 +203,25 @@ class WunravEmbedYoutubeLiveStreaming
             $this->pluginSlug, // page
             $this->pluginSlug . '-settings-testing' // section
         );
+
+        /*****************************************
+         * Form fields for ALERT options
+         ****************************************/
+        add_settings_section(
+            $this->pluginSlug . '-settings-alert', // section ID
+            'Slideout Alert', // section header name
+            array($this, 'printSection_alert'), // callback
+            $this->pluginSlug // page
+        );
+
+        add_settings_field(
+            'alertToggle',
+            'Enable Alert',
+            array($this, 'alertToggle_callback'),
+            $this->pluginSlug, // page
+            $this->pluginSlug . '-settings-alert' // section
+        );
+
     }
 
     /****************************************
@@ -226,14 +237,15 @@ class WunravEmbedYoutubeLiveStreaming
         echo '<strong>NOTE:</strong> Use caution with debugging. It will show both your testing and production API keys.';
     }
 
+    public function printSection_alert()
+    {
+        echo 'Set your custom text for the slideout alert. This alert will automatically display once your stream is live.';
+    }
+
     // sanitize user input
     public function sanitize( $input )
     {
         $new_input = array();
-
-        if ( isset($input['alert-toggle']) ) {
-            $new_input['alert-toggle'] = $input['alert-toggle'];
-        }
 
         if ( isset($input['channelID']) ) {
             $new_input['channelID'] = sanitize_text_field($input['channelID']);
@@ -259,20 +271,16 @@ class WunravEmbedYoutubeLiveStreaming
             $new_input['apiKey-testing'] = sanitize_text_field($input['apiKey-testing']);
         }
 
+        if ( isset($input['alert-toggle']) ) {
+            $new_input['alert-toggle'] = $input['alert-toggle'];
+        }
+
         return $new_input;
     }
 
     /****************************************
      * Callbacks for form fields
      ***************************************/
-    public function alertToggle_callback()
-    {
-        printf(
-            '<input type="checkbox" id="alert-toggle" name="' . $this->pluginSlug . '_settings[alert-toggle]" %s />',
-            checked ( isset($this->options['alert-toggle']), true, false )
-        );
-    }
-
     public function channelID_callback()
     {
         printf(
@@ -319,6 +327,14 @@ class WunravEmbedYoutubeLiveStreaming
         printf(
             '<input type="text" id="apiKey-testing" name="' . $this->pluginSlug .'_settings[apiKey-testing]" value="%s" size="55" maxlength="39" />',
             isset( $this->options['apiKey-testing'] ) ? esc_attr( $this->options['apiKey-testing']) : ''
+        );
+    }
+
+    public function alertToggle_callback()
+    {
+        printf(
+            '<input type="checkbox" id="alert-toggle" name="' . $this->pluginSlug . '_settings[alert-toggle]" %s />',
+            checked ( isset($this->options['alert-toggle']), true, false )
         );
     }
 
