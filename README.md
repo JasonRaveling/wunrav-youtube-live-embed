@@ -1,5 +1,3 @@
-## API KEYS IN REPO... DO NOT MAKE PUBLIC UNLESS REMOVED 
-
 # YouTube Live Embed PHP Class
 This is a WordPress plugin that uses the detects if your YouTube channel is live streaming and then embeds the live YouTube video on a page using a shortcode. It also adds a slideout notification to the page directing people to the live stream. This plugin was created using a barebones class that I have shameless stolen from [this repo](https://github.com/iacchus/youtube-live-embed).
 
