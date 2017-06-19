@@ -3,7 +3,7 @@
 Plugin Name: YouTube Live Streaming Auto Embed
 Description: Detects when a YouTube account is live streaming and creates an embeded video for the stream using a shortcode. (Supports YouTube APIv3)
 Plugin URI: https://github.com/webunraveling/wunrav-youtube-live-streaming-embed
-Version: 0.1.1
+Version: 0.2.1
 Author: Jason Raveling
 Author URI: https://webunraveling.com
 */
@@ -142,8 +142,16 @@ class WunravEmbedYoutubeLiveStreaming
         add_settings_section(
             $this->pluginSlug . '-settings-production', // section ID
             'Production Account', // section header name
-            array($this, 'print_section_production'), // callback
+            array($this, 'printSection_production'), // callback
             $this->pluginSlug // page
+        );
+
+        add_settings_field(
+            'alertToggle',
+            'Enable Alert',
+            array($this, 'alertToggle_callback'),
+            $this->pluginSlug, // page
+            $this->pluginSlug . '-settings-production' // section
         );
 
         add_settings_field(
@@ -168,14 +176,14 @@ class WunravEmbedYoutubeLiveStreaming
         add_settings_section(
             $this->pluginSlug . '-settings-testing', // section ID
             'Testing Account', // section header name
-            array($this, 'print_section_testing'), // callback
+            array($this, 'printSection_testing'), // callback
             $this->pluginSlug // page
         );
 
         add_settings_field(
             'testing-toggle',
             'Enable Testing Account',
-            array($this, 'testing_toggle_callback'), // callback
+            array($this, 'testingToggle_callback'), // callback
             $this->pluginSlug,
             $this->pluginSlug . '-settings-testing' // section
         );
@@ -183,7 +191,7 @@ class WunravEmbedYoutubeLiveStreaming
         add_settings_field(
             'debugging-toggle',
             'Debugging', // Title
-            array($this, 'debugging_toggle_callback'), // callback
+            array($this, 'debuggingToggle_callback'), // callback
             $this->pluginSlug, // page
             $this->pluginSlug . '-settings-testing' // section
         );
@@ -208,12 +216,12 @@ class WunravEmbedYoutubeLiveStreaming
     /****************************************
      * Output sections
      ***************************************/
-    public function print_section_production()
+    public function printSection_production()
     {
         // nothing to do here for now
     }
 
-    public function print_section_testing()
+    public function printSection_testing()
     {
         echo '<strong>NOTE:</strong> Use caution with debugging. It will show both your testing and production API keys.';
     }
@@ -222,6 +230,10 @@ class WunravEmbedYoutubeLiveStreaming
     public function sanitize( $input )
     {
         $new_input = array();
+
+        if ( isset($input['alert-toggle']) ) {
+            $new_input['alert-toggle'] = $input['alert-toggle'];
+        }
 
         if ( isset($input['channelID']) ) {
             $new_input['channelID'] = sanitize_text_field($input['channelID']);
@@ -253,6 +265,14 @@ class WunravEmbedYoutubeLiveStreaming
     /****************************************
      * Callbacks for form fields
      ***************************************/
+    public function alertToggle_callback()
+    {
+        printf(
+            '<input type="checkbox" id="alert-toggle" name="' . $this->pluginSlug . '_settings[alert-toggle]" %s />',
+            checked ( isset($this->options['alert-toggle']), true, false )
+        );
+    }
+
     public function channelID_callback()
     {
         printf(
@@ -269,7 +289,7 @@ class WunravEmbedYoutubeLiveStreaming
         );
     }
 
-    public function testing_toggle_callback()
+    public function testingToggle_callback()
     {
         printf(
             '<input type="checkbox" id="testing-toggle" name="' . $this->pluginSlug . '_settings[testing-toggle]" %s />',
@@ -277,7 +297,7 @@ class WunravEmbedYoutubeLiveStreaming
         );
     }
 
-    public function debugging_toggle_callback()
+    public function debuggingToggle_callback()
     {
         printf(
             '<input type="checkbox" id="debugging-toggle" name="' . $this->pluginSlug . '_settings[debugging-toggle]" %s />',
@@ -326,7 +346,7 @@ class WunravEmbedYoutubeLiveStreaming
     {
         $this->options = get_option( $this->pluginSlug . '_settings' );
 
-        if ( isset($this->options['testing-toggle']) && isset($this->options['debugging-toggle']) ) {
+        if ( isset($this->options['testing-toggle']) && isset($this->options['alert-toggle']) ) {
             return 2;
         } elseif ( isset($this->options['testing-toggle']) ) {
             return 1;
@@ -464,10 +484,9 @@ EOT;
             // content variables
             $alertTitle = 'We Are Live';
             $alertVerbage = 'We are streaming live right now!';
-            $alertButtonURL = $this->;
+            $alertButtonURL = '';
             $alertButtonText = 'Watch Now';
             $alertTabText = 'ON AIR'; // The text that appears on the toggle/tab
-            $alertDebuggingMsg = $this->isTesting() == 2 ? '<p><strong>Debugging Enabled</strong></p>' : '';
 
             // javascript that creates a cookie to stop the alert from
             // taking focus every time the page is loaded
@@ -480,9 +499,7 @@ EOT;
             $out .= '<div class="slideout-content">';
             $out .= '<h2>' . $alertTitle . '</h2>';
             $out .= '<p>' . $alertVerbage . '</p>';
-            $out .= $alertDebuggingMsg;
             $out .= '<a href="' . $alertButtonURL . '"><h4 class="lptv-blue-button-big">' . $alertButtonText . '</h4></a>';
-
             $out .= '</div>';
             $out .= '</div>';
             $out .= '<label for="slideout-button" id="slideout-trigger" class="slideout-trigger onAir"><img src="/wp-content/themes/worldwide-v1-01/images/arrow-triangle.png" /><br />' . implode( "<br />", str_split($alertTabText) ) . '</label>';
