@@ -305,7 +305,7 @@ class WunravEmbedYoutubeLiveStreaming
 
     /**************************************************
      ************** FRONT END *************************
-    /**************************************************
+     **************************************************
      * Begin using the info to output embed code or a
      * default message if no live feed is occuring
      *************************************************/
@@ -462,12 +462,12 @@ EOT;
         if ( $this->isLive() || $this->isTesting() == 2 ) {
             
             // content variables
-            $title = 'Lakeland News Live Online';
-            $verbage = 'Lakeland News is now available for streaming online.';
-            $buttonURL = '/lakeland-news/lakeland-news-live-stream/';
-            $buttonText = 'Watch Now';
-            $tabText = 'ON AIR'; // The text that appears on the toggle/tab
-            $debuggingMsg = $this->isTesting() == 2 ? '<p><strong>Debugging Enabled</strong></p>' : '';
+            $alertTitle = 'We Are Live';
+            $alertVerbage = 'We are streaming live right now!';
+            $alertButtonURL = $this->;
+            $alertButtonText = 'Watch Now';
+            $alertTabText = 'ON AIR'; // The text that appears on the toggle/tab
+            $alertDebuggingMsg = $this->isTesting() == 2 ? '<p><strong>Debugging Enabled</strong></p>' : '';
 
             // javascript that creates a cookie to stop the alert from
             // taking focus every time the page is loaded
@@ -478,14 +478,14 @@ EOT;
             $out .= '<div class="live-feed-slideout" onload="lptv_slidout_onload()">';
             $out .= '<div class="slideout-content-wrap">';
             $out .= '<div class="slideout-content">';
-            $out .= '<h2>' . $title . '</h2>';
-            $out .= '<p>' . $verbage . '</p>';
-            $out .= $debuggingMsg;
-            $out .= '<a href="' . $buttonURL . '"><h4 class="lptv-blue-button-big">' . $buttonText . '</h4></a>';
+            $out .= '<h2>' . $alertTitle . '</h2>';
+            $out .= '<p>' . $alertVerbage . '</p>';
+            $out .= $alertDebuggingMsg;
+            $out .= '<a href="' . $alertButtonURL . '"><h4 class="lptv-blue-button-big">' . $alertButtonText . '</h4></a>';
 
             $out .= '</div>';
             $out .= '</div>';
-            $out .= '<label for="slideout-button" id="slideout-trigger" class="slideout-trigger onAir"><img src="/wp-content/themes/worldwide-v1-01/images/arrow-triangle.png" /><br />' . implode( "<br />", str_split($tabText) ) . '</label>';
+            $out .= '<label for="slideout-button" id="slideout-trigger" class="slideout-trigger onAir"><img src="/wp-content/themes/worldwide-v1-01/images/arrow-triangle.png" /><br />' . implode( "<br />", str_split($alertTabText) ) . '</label>';
             $out .= '</div>';
 
             echo $out;
@@ -495,4 +495,3 @@ EOT;
     }
 
 }
-
