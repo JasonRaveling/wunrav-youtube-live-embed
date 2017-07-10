@@ -496,6 +496,16 @@ EOT;
     {
 
         if ( $this->isLive() || $this->isTesting() == 2 ) {
+	    /***************************
+             * CUSTOM CSS
+             **************************/
+            $out =  '<style type="text/css">';
+            $out .= '.youtube-live-embed-wrapper{width:100%;height:0;position:relative;padding-bottom:56.5%;margin-bottom:1.15rem;}.youtube-live-embed-wrapper iframe{position:absolute;top:0;left:0;width:100%;height:100%;};';
+            $out .= '</style>';
+    
+            /***************************
+             * SLIDEOUT
+             **************************/
             
             // content variables
             $alertTitle = 'We Are Live';
@@ -506,7 +516,7 @@ EOT;
 
             // javascript that creates a cookie to stop the alert from
             // taking focus every time the page is loaded
-            $out = '<script type="text/javascript" src="' . plugins_url('includes/live-feed-cookie.js', __FILE__) . '"></script>';
+            $out .= '<script type="text/javascript" src="' . plugins_url('includes/live-feed-cookie.js', __FILE__) . '"></script>';
 
             // lets do the work
             $out .= '<input type="checkbox" id="slideout-button" name="slideout-button">';
