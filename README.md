@@ -1,4 +1,4 @@
-s is a WordPress plugin that uses the YouTube API to detect if you're channel is live streaming and then embeds the YouTube live video on a page. A  modified version of [this repo](https://github.com/iacchus/youtube-live-embed) has been implemented here.
+This is a WordPress plugin that uses the YouTube API to detect if you're channel is live streaming and then embeds the YouTube live video on a page. A  modified version of [this repo](https://github.com/iacchus/youtube-live-embed) has been implemented here.
 
 ## Usage
 
