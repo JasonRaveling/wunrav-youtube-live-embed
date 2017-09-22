@@ -137,6 +137,32 @@ class WunravEmbedYoutubeLiveStreaming
         );
 
         /*****************************************
+         * Form fields for verbage / customization
+         ****************************************/
+        add_settings_section(
+            $this->pluginSlug . '-settings-customization', // section ID
+            'Customization', // section header name
+            array($this, 'printSection_customization'), //callback
+            $this->pluginSlug // page
+        );
+
+        add_settings_field(
+            'alertTitle',
+            'Header / Title',
+            array($this, 'alertTitle_callback'),
+            $this->pluginSlug, // page
+            $this->pluginSlug . '-settings-customization' //section
+        );
+
+        add_settings_field(
+            'alertMessage',
+            'Message',
+            array($this, 'alertMessage_callback'),
+            $this->pluginSlug, //page
+            $this->pluginSlug . '-settings-customization' //section
+        );
+
+        /*****************************************
          * Form fields for production account
          ****************************************/
         add_settings_section(
@@ -203,30 +229,16 @@ class WunravEmbedYoutubeLiveStreaming
             $this->pluginSlug, // page
             $this->pluginSlug . '-settings-testing' // section
         );
-
-        /*****************************************
-         * Form fields for ALERT options
-         ****************************************/
-        add_settings_section(
-            $this->pluginSlug . '-settings-alert', // section ID
-            'Slideout Alert', // section header name
-            array($this, 'printSection_alert'), // callback
-            $this->pluginSlug // page
-        );
-
-        add_settings_field(
-            'alertToggle',
-            'Enable Alert',
-            array($this, 'alertToggle_callback'),
-            $this->pluginSlug, // page
-            $this->pluginSlug . '-settings-alert' // section
-        );
-
     }
 
     /****************************************
      * Output sections
      ***************************************/
+    public function printSection_customization()
+    {
+        echo 'Customize the slide out alert that appears when youi\'re live.';
+    }
+
     public function printSection_production()
     {
         // nothing to do here for now
@@ -235,11 +247,6 @@ class WunravEmbedYoutubeLiveStreaming
     public function printSection_testing()
     {
         echo '<strong>NOTE:</strong> Use caution with debugging. It will show both your testing and production API keys.';
-    }
-
-    public function printSection_alert()
-    {
-        echo 'Set your custom text for the slideout alert. This alert will automatically display once your stream is live.';
     }
 
     // sanitize user input
@@ -269,10 +276,6 @@ class WunravEmbedYoutubeLiveStreaming
 
         if ( isset($input['apiKey-testing']) ) {
             $new_input['apiKey-testing'] = sanitize_text_field($input['apiKey-testing']);
-        }
-
-        if ( isset($input['alert-toggle']) ) {
-            $new_input['alert-toggle'] = $input['alert-toggle'];
         }
 
         return $new_input;
