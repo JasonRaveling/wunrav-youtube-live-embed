@@ -279,11 +279,11 @@ class WunravEmbedYoutubeLiveStreaming
         }
         
         if ( isset($input['testing-toggle']) ) {
-            $new_input['testing-toggle'] = $input['testing-toggle'];
+            $new_input['testing-toggle'] = absint($input['testing-toggle']);
         }
 
         if ( isset($input['debugging-toggle']) ) {
-            $new_input['debugging-toggle'] = $input['debugging-toggle'];
+            $new_input['debugging-toggle'] = absint($input['debugging-toggle']);
         }
 
         if ( isset($input['channelID-testing']) ) {
