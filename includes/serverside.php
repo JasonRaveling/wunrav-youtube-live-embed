@@ -99,7 +99,7 @@ class WunravEmbedYoutubeLiveStreaming
 
         echo '<div class="wrap">';
         echo '<h1>YouTube Auto Live Embed</h1>';
-        echo '<p>To use this plugin, just place the <code>[live-youtube]</code> shortcode in the page or post you would like your live feed to appear.</p>';
+        echo '<p>To use this plugin, just place the <code>[live-youtube]</code> shortcode in the page or post you would like your live feed to appear. Instructions on <a href="">how to setup this plugin</a> are available on GitHub.</p>';
         if ( $this->isTesting() ) {
             echo '<h2 style="color:red;">NOTE: Your testing account is enabled.</h2>';
         }
@@ -108,20 +108,6 @@ class WunravEmbedYoutubeLiveStreaming
         do_settings_sections( $this->pluginSlug );
         submit_button();
         echo '</form>';
-        echo '<h1>Instructions</h1>';
-        echo 'All you need is a channel ID and an API key for your channel to use this plugin. Here is how to get them.';
-        echo '<h3>Getting the Channel ID</h3>';
-        echo '<ol>';
-        echo '<li>Login to <a target="_blank" href="https://youtube.com">YouTube.com</a>.</li>';
-        echo '<li>Click on "My Channel".</li><li>Look at the URL. It should say something like <code>https://youtube.com/channel/[someRandomStuff]</code>. Copy the random stuff from the URL and paste it in the "Channel ID" field.</li>';
-        echo '</ol>';
-        echo '<h3>Getting the YouTube API Key</h3>';
-        echo '<ol>';
-        echo '<li>Create a project at google developer console (<a target="_blank" href="https://console.developers.google.com">console.developers.google.com</a>).</li>';
-        echo '<li>Enable YouTube API for that project.</li>';
-        echo '<li>Create a credential of type "Public API Access", a "Server key", with the IP of your website. This will create an API key for you.</li>';
-        echo '<li>Copy the API key and paste into the API Key field above.</li>';
-        echo '</ol>';
         echo '</div>';
     }
 
@@ -139,7 +125,7 @@ class WunravEmbedYoutubeLiveStreaming
          ****************************************/
         add_settings_section(
             $this->pluginSlug . '-settings-customization', // section ID
-            'Customization', // section header name
+            'Message & Notification', // section header name
             array($this, 'printSection_customization'), //callback
             $this->pluginSlug // page
         );
@@ -153,9 +139,25 @@ class WunravEmbedYoutubeLiveStreaming
         );
 
         add_settings_field(
-            'alertMessage',
+            'alertMsg',
             'Message',
-            array($this, 'alertMessage_callback'),
+            array($this, 'alertMsg_callback'),
+            $this->pluginSlug, //page
+            $this->pluginSlug . '-settings-customization' //section
+        );
+
+        add_settings_field(
+            'alertBtn',
+            'Button Text',
+            array($this, 'alertBtn_callback'),
+            $this->pluginSlug, //page
+            $this->pluginSlug . '-settings-customization' //section
+        );
+
+        add_settings_field(
+            'alertBtnURL',
+            'Button URL',
+            array($this, 'alertBtnURL_callback'),
             $this->pluginSlug, //page
             $this->pluginSlug . '-settings-customization' //section
         );
@@ -234,7 +236,7 @@ class WunravEmbedYoutubeLiveStreaming
      ***************************************/
     public function printSection_customization()
     {
-        echo 'Customize the slide out alert that appears when youi\'re live.';
+        // nothing to do here for now
     }
 
     public function printSection_production()
@@ -251,6 +253,22 @@ class WunravEmbedYoutubeLiveStreaming
     public function sanitize( $input )
     {
         $new_input = array();
+
+        if ( isset($input['alertTitle']) ) {
+            $new_input['alertTitle'] = sanitize_text_field($input['alertTitle']);
+        }
+
+        if ( isset($input['alertMsg']) ) {
+            $new_input['alertMsg'] = sanitize_text_field($input['alertMsg']);
+        }
+
+        if ( isset($input['alertBtn']) ) {
+            $new_input['alertBtn'] = sanitize_text_field($input['alertBtn']);
+        }
+
+        if ( isset($input['alertBtnURL']) ) {
+            $new_input['alertBtnURL'] = esc_url_raw($input['alertBtnURL'], array('http','https'));
+        }
 
         if ( isset($input['channelID']) ) {
             $new_input['channelID'] = sanitize_text_field($input['channelID']);
@@ -282,10 +300,42 @@ class WunravEmbedYoutubeLiveStreaming
     /****************************************
      * Callbacks for form fields
      ***************************************/
+    public function alertTitle_callback()
+    {
+        printf(
+            '<input type="text" id="alertTitle" name="' . $this->pluginSlug . '_settings[alertTitle]" value="%s" size="60" maxlength="500" />',
+            isset( $this->options['alertTitle'] ) ? esc_attr( $this->options['alertTitle']) : ''
+        );
+    }
+
+    public function alertMsg_callback()
+    {
+        printf(
+            '<textarea id="alertMsg" name="' . $this->pluginSlug . '_settings[alertMsg]" cols="65" rows="3" maxlength="800">%s</textarea>',
+            isset( $this->options['alertMsg'] ) ? esc_attr( $this->options['alertMsg']) : ''
+        );
+    }
+
+    public function alertBtn_callback()
+    {
+        printf(
+            '<input type="text" id="alertBtn" name="' . $this->pluginSlug . '_settings[alertBtn]" value="%s" size="60" maxlength="500" />',
+            isset( $this->options['alertBtn'] ) ? esc_attr( $this->options['alertBtn']) : ''
+        );
+    }
+
+    public function alertBtnURL_callback()
+    {
+        printf(
+            '<input type="text" id="alertBtnURL" name="' . $this->pluginSlug . '_settings[alertBtnURL]" value="%s" size="60" maxlength="800" placeholder="must start with http:// or https://" />',
+            isset( $this->options['alertBtnURL'] ) ? esc_attr( $this->options['alertBtnURL']) : ''
+        );
+    }
+
     public function channelID_callback()
     {
         printf(
-            '<input type="text" id="channelID" name="' . $this->pluginSlug . '_settings[channelID]" value="%s" size="55" maxlength="24" />',
+            '<input type="text" id="channelID" name="' . $this->pluginSlug . '_settings[channelID]" value="%s" size="60" maxlength="24" />',
             isset( $this->options['channelID'] ) ? esc_attr( $this->options['channelID']) : ''
         );
     }
@@ -293,7 +343,7 @@ class WunravEmbedYoutubeLiveStreaming
     public function apiKey_callback()
     {
         printf(
-            '<input type="text" id="apiKey" name="' . $this->pluginSlug .'_settings[apiKey]" value="%s" size="55" maxlength="39" />',
+            '<input type="text" id="apiKey" name="' . $this->pluginSlug .'_settings[apiKey]" value="%s" size="60" maxlength="39" />',
             isset( $this->options['apiKey'] ) ? esc_attr( $this->options['apiKey']) : ''
         );
     }
@@ -318,7 +368,7 @@ class WunravEmbedYoutubeLiveStreaming
     public function channelID_testing_callback()
     {
         printf(
-            '<input type="text" id="channelID-testing" name="' . $this->pluginSlug . '_settings[channelID-testing]" value="%s" size="55" maxlength="24" />',
+            '<input type="text" id="channelID-testing" name="' . $this->pluginSlug . '_settings[channelID-testing]" value="%s" size="60" maxlength="24" />',
             isset( $this->options['channelID-testing'] ) ? esc_attr( $this->options['channelID-testing']) : ''
         );
     }
@@ -326,7 +376,7 @@ class WunravEmbedYoutubeLiveStreaming
     public function apiKey_testing_callback()
     {
         printf(
-            '<input type="text" id="apiKey-testing" name="' . $this->pluginSlug .'_settings[apiKey-testing]" value="%s" size="55" maxlength="39" />',
+            '<input type="text" id="apiKey-testing" name="' . $this->pluginSlug .'_settings[apiKey-testing]" value="%s" size="60" maxlength="39" />',
             isset( $this->options['apiKey-testing'] ) ? esc_attr( $this->options['apiKey-testing']) : ''
         );
     }
@@ -509,10 +559,6 @@ EOT;
              **************************/
             
             // content variables
-            $alertTitle = 'We Are Live';
-            $alertVerbage = 'We are streaming live right now!';
-            $alertButtonURL = '';
-            $alertButtonText = 'Watch Now';
             $alertTabText = 'ON AIR'; // The text that appears on the toggle/tab
 
             // javascript that creates a cookie to stop the alert from
@@ -524,12 +570,12 @@ EOT;
             $out .= '<div class="live-feed-slideout" onload="lptv_slidout_onload()">';
             $out .= '<div class="slideout-content-wrap">';
             $out .= '<div class="slideout-content">';
-            $out .= '<h2>' . $alertTitle . '</h2>';
-            $out .= '<p>' . $alertVerbage . '</p>';
-            $out .= '<a href="' . $alertButtonURL . '"><h4 class="lptv-blue-button-big">' . $alertButtonText . '</h4></a>';
+            $out .= '<h2>' . $this->options['alertTitle'] . '</h2>';
+            $out .= '<p>' . $this->options['alertMsg'] . '</p>';
+            $out .= '<a href="' . $this->options['alertBtnURL'] . '"><h4 class="lptv-blue-button-big">' . $this->options['alertBtn'] . '</h4></a>';
             $out .= '</div>';
             $out .= '</div>';
-            $out .= '<label for="slideout-button" id="slideout-trigger" class="slideout-trigger onAir"><img src="/wp-content/themes/worldwide-v1-01/images/arrow-triangle.png" /><br />' . implode( "<br />", str_split($alertTabText) ) . '</label>';
+            $out .= '<label for="slideout-button" id="slideout-trigger" class="slideout-trigger onAir"><img src="'. plugins_url('/arrow-triangle.png', __FILE__) .'" /><br />' . implode( "<br />", str_split($alertTabText) ) . '</label>';
             $out .= '</div>';
 
             echo $out;
