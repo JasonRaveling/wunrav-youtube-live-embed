@@ -12,8 +12,6 @@ class WunravEmbedYoutubeLiveStreaming
 {
     public $pluginSlug;
 
-    public $channelCreds;
-
     public $jsonResponse; // pure server response
     public $objectResponse; // response decoded as object
     public $arrayRespone; // response decoded as array
