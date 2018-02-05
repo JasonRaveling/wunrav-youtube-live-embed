@@ -38,14 +38,14 @@ class WunravEmbedYoutubeLiveStreaming
     public $embed_height;
 
     public $live_video_id;
+
+    /* Unused vars *
+    public $channel_title;
+    public $live_video_thumb_high;
+    public $live_video_publishedAt;
     public $live_video_title;
     public $live_video_description;
-
-    public $live_video_publishedAt;
-
-    public $live_video_thumb_high;
-
-    public $channel_title;
+    */
 
     public $options; // options entered into admin form
 
@@ -101,7 +101,7 @@ class WunravEmbedYoutubeLiveStreaming
         echo '<h1>YouTube Auto Live Embed</h1>';
         echo '<p>To use this plugin, just place the <code>[live-youtube]</code> shortcode in the page or post you would like your live feed to appear. Instructions on <a href="">how to setup this plugin</a> are available on GitHub.</p>';
         if ( $this->isTesting() ) {
-            echo '<h2 style="color:red;">NOTE: Your testing account is enabled.</h2>';
+            echo '<h2 style="color:red;">NOTE: Your testing account is enabled. Your "on-air" alert will always be active while testing is enabled.</h2>';
         }
         echo '<form method="post" action="options.php">';
         settings_fields( $this->pluginSlug . '_settings' );
@@ -125,7 +125,7 @@ class WunravEmbedYoutubeLiveStreaming
          ****************************************/
         add_settings_section(
             $this->pluginSlug . '-settings-customization', // section ID
-            'Message & Notification', // section header name
+            'Slideout / Notification', // section header name
             array($this, 'printSection_customization'), //callback
             $this->pluginSlug // page
         );
@@ -200,7 +200,7 @@ class WunravEmbedYoutubeLiveStreaming
 
         add_settings_field(
             'testing-toggle',
-            'Enable Testing Account',
+            'Testing Account',
             array($this, 'testingToggle_callback'), // callback
             $this->pluginSlug,
             $this->pluginSlug . '-settings-testing' // section
@@ -236,7 +236,7 @@ class WunravEmbedYoutubeLiveStreaming
      ***************************************/
     public function printSection_customization()
     {
-        // nothing to do here for now
+        echo 'Customize your on-air notification here.';
     }
 
     public function printSection_production()
@@ -279,11 +279,11 @@ class WunravEmbedYoutubeLiveStreaming
         }
         
         if ( isset($input['testing-toggle']) ) {
-            $new_input['testing-toggle'] = absint($input['testing-toggle']);
+            $new_input['testing-toggle'] = filter_var($input['testing-toggle'], FILTER_VALIDATE_BOOLEAN);
         }
 
         if ( isset($input['debugging-toggle']) ) {
-            $new_input['debugging-toggle'] = absint($input['debugging-toggle']);
+            $new_input['debugging-toggle'] = filter_var($input['debugging-toggle'], FILTER_VALIDATE_BOOLEAN);
         }
 
         if ( isset($input['channelID-testing']) ) {
@@ -362,7 +362,6 @@ class WunravEmbedYoutubeLiveStreaming
             '<input type="checkbox" id="debugging-toggle" name="' . $this->pluginSlug . '_settings[debugging-toggle]" %s />',
             checked ( isset($this->options['debugging-toggle']), true, false )
         );
-
     }
 
     public function channelID_testing_callback()
@@ -378,14 +377,6 @@ class WunravEmbedYoutubeLiveStreaming
         printf(
             '<input type="text" id="apiKey-testing" name="' . $this->pluginSlug .'_settings[apiKey-testing]" value="%s" size="60" maxlength="39" />',
             isset( $this->options['apiKey-testing'] ) ? esc_attr( $this->options['apiKey-testing']) : ''
-        );
-    }
-
-    public function alertToggle_callback()
-    {
-        printf(
-            '<input type="checkbox" id="alert-toggle" name="' . $this->pluginSlug . '_settings[alert-toggle]" %s />',
-            checked ( isset($this->options['alert-toggle']), true, false )
         );
     }
 
@@ -411,12 +402,12 @@ class WunravEmbedYoutubeLiveStreaming
 
     public function isTesting()
     {
-        $this->options = get_option( $this->pluginSlug . '_settings' );
-
-        if ( isset($this->options['testing-toggle']) && isset($this->options['alert-toggle']) ) {
+        if ( isset($this->options['testing-toggle']) && isset($this->options['debugging-toggle']) ) {
             return 2;
         } elseif ( isset($this->options['testing-toggle']) ) {
             return 1;
+        } else {
+            return 0;
         }
     }
 
@@ -424,17 +415,20 @@ class WunravEmbedYoutubeLiveStreaming
     {
         $this->options = get_option( $this->pluginSlug . '_settings' );
 
-        $out['channelID'] = $this->options[($this->isTesting() ? 'channelID-testing' : 'channelID')]; // make required
-        $out['apiKey'] = $this->options[($this->isTesting() ? 'apiKey-testing': 'apiKey')]; // make required
+        if ( $this->isTesting() ) {
+            $out['channelID'] = $this->options['channelID-testing'];
+            $out['apiKey'] = $this->options['apiKey-testing'];
+        } else {
+            $out['channelID'] = $this->options['channelID'];
+            $out['apiKey'] = $this->options['apiKey'];
+        }
 
         return $out;
     }
 
     public function debugging()
     {
-        $this->options = get_option( $this->pluginSlug . '_settings' );
-
-        if ( isset($this->options['debugging-toggle']) && $this->isTesting() ) {
+        if ( $this->isTesting() == 2 ) {
             $out =  '--------------------------------------------------<br />';
             $out .= ' DEBUGGING<br />';
             $out .= ' note: slideout is always on when debugging is on<br />';
@@ -546,7 +540,7 @@ EOT;
     public function alert()
     {
 
-        if ( $this->isLive() || $this->isTesting() == 2 ) {
+        if ( $this->isLive() || $this->isTesting() ) {
 	    /***************************
              * CUSTOM CSS
              **************************/
