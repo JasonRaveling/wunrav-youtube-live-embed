@@ -16,8 +16,6 @@ class WunravEmbedYoutubeLiveStreaming
     public $objectResponse; // response decoded as object
     public $arrayRespone; // response decoded as array
 
-    public $isLive; // true if there is a live streaming at the channel
-
     public $queryData; // query values as an array
     public $getAddress; // address to request GET
     public $getQuery; // data to request, encoded
@@ -429,14 +427,18 @@ class WunravEmbedYoutubeLiveStreaming
     public function debugging()
     {
         if ( $this->isTesting() == 2 ) {
-            $out =  '--------------------------------------------------<br />';
+            $out = '<strong><br />';
+            $out .= '##################################################<br />';
             $out .= ' DEBUGGING<br />';
             $out .= ' note: slideout is always on when debugging is on<br />';
-            $out .= '--------------------------------------------------<br />';
+            $out .= '##################################################<br /></strong>';
             $out .= '<pre>' . print_r($this->options, true) . '</pre>';
-            $out .= '--------------------------------------------------<br />';
+            $out .= '<br /><strong>YouTube Retured JSON Below</strong><br />';
+            $out .= ( $this->objectResponse ? '<pre>' . json_encode($this->objectResponse, JSON_PRETTY_PRINT) . '</pre>' : '' );
+            $out .= '<strong>';
+            $out .= '##################################################<br />';
             $out .= ' END DEBUGGING<br />';
-            $out .= '--------------------------------------------------<br />';
+            $out .= '##################################################<br /></strong>';
             
             return $out;
         } else {
@@ -469,7 +471,7 @@ class WunravEmbedYoutubeLiveStreaming
         $this->arrayResponse = json_decode($this->jsonResponse, TRUE); // decode as array
 
         $this->isLive();
-        if( $this->isLive ) {
+        if( $this->isLive() ) {
 
             $this->live_video_id = $this->objectResponse->items[0]->id->videoId;
 
@@ -490,13 +492,9 @@ class WunravEmbedYoutubeLiveStreaming
             $this->queryIt();
         }
 
-        $live_items = count($this->objectResponse->items);
-
-        if( $live_items > 0 ) {
-            $this->isLive = true;
+        if( count($this->objectResponse->items) > 0 ) {
             return true;
         } else {
-            $this->isLive = false;
             return false;
         }
     }
@@ -507,7 +505,7 @@ class WunravEmbedYoutubeLiveStreaming
         $this->embed_width = $width;
         $this->embed_height = $width / $ratio;
 
-        if( $refill_code == true ) { $this->embedCode(); }
+        if( $refill_code ) { $this->embedCode(); }
     }
 
     public function setEmbedSizeByHeight( $height, $refill_code = true )
@@ -516,7 +514,7 @@ class WunravEmbedYoutubeLiveStreaming
         $this->embed_height = $height;
         $this->embed_width = $height * $ratio;
 
-        if( $refill_code == true ) { $this->embedCode(); }
+        if( $refill_code ) { $this->embedCode(); }
     }
 
     public function embedCode()
@@ -552,11 +550,7 @@ EOT;
              * SLIDEOUT
              **************************/
             
-            // content variables
-            $alertTabText = 'ON AIR'; // The text that appears on the toggle/tab
-
-            // javascript that creates a cookie to stop the alert from
-            // taking focus every time the page is loaded
+            // creates a cookie to stop the alert from taking focus every time the page is loaded
             $out .= '<script type="text/javascript" src="' . plugins_url('includes/live-feed-cookie.js', __FILE__) . '"></script>';
 
             // lets do the work
@@ -569,7 +563,7 @@ EOT;
             $out .= '<a href="' . $this->options['alertBtnURL'] . '"><h4 class="lptv-blue-button-big">' . $this->options['alertBtn'] . '</h4></a>';
             $out .= '</div>';
             $out .= '</div>';
-            $out .= '<label for="slideout-button" id="slideout-trigger" class="slideout-trigger onAir"><img src="'. plugins_url('/arrow-triangle.png', __FILE__) .'" /><br />' . implode( "<br />", str_split($alertTabText) ) . '</label>';
+            $out .= '<label for="slideout-button" id="slideout-trigger" class="slideout-trigger onAir"><img src="'. plugins_url('/arrow-triangle.png', __FILE__) .'" /><br />' . implode( "<br />", str_split("ON AIR") ) . '</label>';
             $out .= '</div>';
 
             echo $out;
