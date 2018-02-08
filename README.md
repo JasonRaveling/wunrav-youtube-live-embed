@@ -26,4 +26,3 @@ To create your API key:
 ## Todo List
 
 * Add ability to customize the off-air message.
-* Add option to show a slate of the youtube video size. Make it a link to refresh the page or even better, refresh the page automatically.
