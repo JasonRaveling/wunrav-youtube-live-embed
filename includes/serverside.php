@@ -14,7 +14,6 @@ class WunravEmbedYoutubeLiveStreaming
 
     public $jsonResponse; // pure server response
     public $objectResponse; // response decoded as object
-    public $arrayRespone; // response decoded as array
 
     public $queryData; // query values as an array
     public $getAddress; // address to request GET
@@ -26,38 +25,28 @@ class WunravEmbedYoutubeLiveStreaming
     public $eventType;
     public $type;
 
-    public $default_ratio;
-
-    public $embed_code; // contain the embed code
+    public $embed_code;
     public $embed_autoplay;
     public $embed_width;
     public $embed_height;
 
     public $live_video_id;
 
-    /* Unused vars *
-    public $channel_title;
-    public $live_video_thumb_high;
-    public $live_video_publishedAt;
-    public $live_video_title;
-    public $live_video_description;
-    */
-
-    public $options; // options entered into admin form
+    public $options; // options entered into wp-admin form
 
     public function __construct()
     {
         $this->pluginSlug = 'wunrav-live-youtube-embed';
 
+        // settings for API query
         $this->part = "id,snippet";
         $this->eventType = "live";
         $this->type = "video";
-
         $this->getAddress = "https://www.googleapis.com/youtube/v3/search?";
 
+        // settings for embed
         $this->embed_width = "800";
         $this->embed_height = "450";
-
         $this->embed_autoplay = true;
 
         $this->queryIt();
@@ -154,6 +143,33 @@ class WunravEmbedYoutubeLiveStreaming
             $this->pluginSlug . '-settings-customization' //section
         );
 
+
+        /*****************************************
+         * Form fields for JavaScript options
+         ****************************************/
+        add_settings_section(
+            $this->pluginSlug . '-settings-jsOptions', // section ID
+            'Automatic Updating', // section header name
+            array($this, 'printSection_jsOptions'), // callback
+            $this->pluginSlug // page
+        );
+
+        add_settings_field(
+            'useJS',
+            'Auto Load Alert & Video Embed',
+            array($this, 'useJS_callback'),
+            $this->pluginSlug, // page
+            $this->pluginSlug . '-settings-jsOptions' // section
+        );
+
+        add_settings_field(
+            'loadjQuery',
+            'Load jQuery',
+            array($this, 'loadjQuery_callback'),
+            $this->pluginSlug, // page
+            $this->pluginSlug . '-settings-jsOptions' // section
+        );
+
         /*****************************************
          * Form fields for production account
          ****************************************/
@@ -236,6 +252,11 @@ class WunravEmbedYoutubeLiveStreaming
         // nothing to do here for now
     }
 
+    public function printSection_jsOptions()
+    {
+        echo 'This option enables your site to automatically display the alert without the page being reloaded.';
+    }
+
     public function printSection_testing()
     {
         echo '<strong>NOTE:</strong> Use caution with debugging. It will show both your testing and production API keys.';
@@ -260,6 +281,14 @@ class WunravEmbedYoutubeLiveStreaming
 
         if ( isset($input['alertBtnURL']) ) {
             $new_input['alertBtnURL'] = esc_url_raw($input['alertBtnURL'], array('http','https'));
+        }
+
+        if ( isset($input['useJS']) ) {
+            $new_input['useJS'] = filter_var($input['useJS'], FILTER_VALIDATE_BOOLEAN);
+        }
+
+        if ( isset($input['loadjQuery']) ) {
+            $new_input['loadjQuery'] = filter_var($input['loadjQuery'], FILTER_VALIDATE_BOOLEAN);
         }
 
         if ( isset($input['channelID']) ) {
@@ -324,6 +353,22 @@ class WunravEmbedYoutubeLiveStreaming
         );
     }
 
+    public function useJS_callback()
+    {
+        printf(
+            '<input type="checkbox" id="useJS" name="' . $this->pluginSlug . '_settings[useJS]" %s />Enables auto loading.',
+            checked ( isset($this->options['useJS']), true, false )
+        );
+    }
+
+    public function loadjQuery_callback()
+    {
+        printf(
+            '<input type="checkbox" id="loadjQuery" name="' . $this->pluginSlug . '_settings[loadjQuery]" %s />Enable if your site does not already use jQuery.',
+            checked ( isset($this->options['loadjQuery']), true, false )
+        );
+    }
+
     public function channelID_callback()
     {
         printf(
@@ -343,7 +388,7 @@ class WunravEmbedYoutubeLiveStreaming
     public function testingToggle_callback()
     {
         printf(
-            '<input type="checkbox" id="testing-toggle" name="' . $this->pluginSlug . '_settings[testing-toggle]" %s />',
+            '<input type="checkbox" id="testing-toggle" name="' . $this->pluginSlug . '_settings[testing-toggle]" %s />Enable to use your testing account.',
             checked ( isset($this->options['testing-toggle']), true, false )
         );
     }
@@ -351,7 +396,7 @@ class WunravEmbedYoutubeLiveStreaming
     public function debuggingToggle_callback()
     {
         printf(
-            '<input type="checkbox" id="debugging-toggle" name="' . $this->pluginSlug . '_settings[debugging-toggle]" %s />',
+            '<input type="checkbox" id="debugging-toggle" name="' . $this->pluginSlug . '_settings[debugging-toggle]" %s />Enables debugging where shortcode is used.',
             checked ( isset($this->options['debugging-toggle']), true, false )
         );
     }
@@ -399,6 +444,24 @@ class WunravEmbedYoutubeLiveStreaming
             return 1;
         } else {
             return 0;
+        }
+    }
+
+    public function useJS()
+    {
+        if ( $this->options['useJS'] ) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function loadjQuery()
+    {
+        if ( $this->options['loadjQuery'] ) {
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -461,19 +524,12 @@ class WunravEmbedYoutubeLiveStreaming
 
         $this->jsonResponse = file_get_contents($this->queryString); // pure server response
         $this->objectResponse = json_decode($this->jsonResponse); // decode as object
-        $this->arrayResponse = json_decode($this->jsonResponse, TRUE); // decode as array
+        //$this->arrayResponse = json_decode($this->jsonResponse, TRUE); // decode as array
 
-        $this->isLive();
         if( $this->isLive() ) {
 
             $this->live_video_id = $this->objectResponse->items[0]->id->videoId;
-
-            // Can return many variables but we only need the one above for the embed code
-            // $this->live_video_title = $this->objectResponse->items[0]->snippet->title;
-            // $this->live_video_description = $this->objectResponse->items[0]->snippet->description;
-            // $this->live_video_published_at = $this->objectResponse->items[0]->snippet->publishedAt;
             // $this->live_video_thumb_high = $this->objectResponse->items[0]->snippet->thumbnails->high->url;
-            // $this->channel_title = $this->objectResponse->items[0]->snippet->channelTitle;
 
             $this->embedCode();
         }
@@ -509,37 +565,50 @@ EOT;
         return $this->embed_code;
     }
 
-    // create an alert on every page
+    // creates a slideout alert on every page
     public function alert()
     {
 
         if ( $this->isLive() || $this->isTesting() ) {
-	    /***************************
-             * CUSTOM CSS
-             **************************/
-            wp_enqueue_style('wunrav-youtube-live-embed-style', plugins_url('wunrav-youtube-live-embed/includes/stylesheets/css/style.css'), __FILE__);
-    
-            /***************************
-             * SLIDEOUT
-             **************************/
-            
-            // creates a cookie to stop the alert from taking focus every time the page is loaded
-            $out = '<script type="text/javascript" src="' . plugins_url('includes/live-feed-cookie.js', __FILE__) . '"></script>';
 
-            // lets do the work
-            $out .= '<input type="checkbox" id="slideout-button" name="slideout-button">';
-            $out .= '<div class="live-feed-slideout" onload="lptv_slidout_onload()">';
-            $out .= '<div class="slideout-content-wrap">';
-            $out .= '<div class="slideout-content">';
-            $out .= '<h2>' . $this->options['alertTitle'] . '</h2>';
-            $out .= '<p>' . $this->options['alertMsg'] . '</p>';
-            $out .= '<a href="' . $this->options['alertBtnURL'] . '"><h4 class="lptv-blue-button-big">' . $this->options['alertBtn'] . '</h4></a>';
-            $out .= '</div>';
-            $out .= '</div>';
-            $out .= '<label for="slideout-button" id="slideout-trigger" class="slideout-trigger onAir"><img src="'. plugins_url('images/arrow-triangle.png', __FILE__) .'" /><br />' . implode( "<br />", str_split("ON AIR") ) . '</label>';
-            $out .= '</div>';
+            if ( $this->useJS() ) {
 
-            echo $out;
+                // Make this script work with the plugin
+                wp_enqueue_script('wunrav-youtube-live-embed-clientside', plugins_url('wunrav-youtube-live-embed/includes/clientside.js'), __FILE__);
+
+                if ($this->loadjQuery() ) {
+                    wp_enqueue_script('wunrav-youtube-live-embed-jquery', plugins_url('wunrav-youtube-live-embed/includes/jquery-3.3.1.min.js'), __FILE__);
+                }
+
+            } else {
+
+                /***************************
+                 * CUSTOM CSS
+                 **************************/
+                wp_enqueue_style('wunrav-youtube-live-embed-style', plugins_url('wunrav-youtube-live-embed/includes/stylesheets/css/style.css'), __FILE__);
+
+                /***************************
+                 * SLIDEOUT
+                 **************************/
+
+                // creates a cookie to stop the alert from taking focus every time the page is loaded
+                $out = '<script type="text/javascript" src="' . plugins_url('includes/live-feed-cookie.js', __FILE__) . '"></script>';
+
+                // lets do the work
+                $out .= '<input type="checkbox" id="slideout-button" name="slideout-button">';
+                $out .= '<div class="live-feed-slideout" onload="lptv_slidout_onload()">';
+                $out .= '<div class="slideout-content-wrap">';
+                $out .= '<div class="slideout-content">';
+                $out .= '<h2>' . $this->options['alertTitle'] . '</h2>';
+                $out .= '<p>' . $this->options['alertMsg'] . '</p>';
+                $out .= '<a href="' . $this->options['alertBtnURL'] . '"><h4 class="lptv-blue-button-big">' . $this->options['alertBtn'] . '</h4></a>';
+                $out .= '</div>';
+                $out .= '</div>';
+                $out .= '<label for="slideout-button" id="slideout-trigger" class="slideout-trigger onAir"><img src="'. plugins_url('images/arrow-triangle.png', __FILE__) .'" /><br />' . implode( "<br />", str_split("ON AIR") ) . '</label>';
+                $out .= '</div>';
+
+                echo $out;
+            }
 
         }
 
