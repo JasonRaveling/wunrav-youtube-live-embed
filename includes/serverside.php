@@ -26,8 +26,6 @@ class WunravEmbedYoutubeLiveStreaming
     public $eventType;
     public $type;
 
-    public $default_embed_width;
-    public $default_embed_height;
     public $default_ratio;
 
     public $embed_code; // contain the embed code
@@ -57,12 +55,8 @@ class WunravEmbedYoutubeLiveStreaming
 
         $this->getAddress = "https://www.googleapis.com/youtube/v3/search?";
 
-        $this->default_embed_width = "800";
-        $this->default_embed_height = "450";
-        $this->default_ratio = $this->default_embed_width / $this->default_embed_height;
-
-        $this->embed_width = $this->default_embed_width;
-        $this->embed_height = $this->default_embed_height;
+        $this->embed_width = "800";
+        $this->embed_height = "450";
 
         $this->embed_autoplay = true;
 
@@ -391,7 +385,6 @@ class WunravEmbedYoutubeLiveStreaming
         if ( $this->isLive() ) {
             echo $this->embedCode();
         } else {
-            // this will be user generated soon.
             echo $this->offAirMessage();
         }
 
@@ -499,24 +492,6 @@ class WunravEmbedYoutubeLiveStreaming
         }
     }
 
-    public function setEmbedSizeByWidth( $width, $refill_code = true )
-    {
-        $ratio = $this->default_embed_width / $this->default_embed_height;
-        $this->embed_width = $width;
-        $this->embed_height = $width / $ratio;
-
-        if( $refill_code ) { $this->embedCode(); }
-    }
-
-    public function setEmbedSizeByHeight( $height, $refill_code = true )
-    {
-        $ratio = $this->default_embed_width / $this->default_embed_height;
-        $this->embed_height = $height;
-        $this->embed_width = $height * $ratio;
-
-        if( $refill_code ) { $this->embedCode(); }
-    }
-
     public function embedCode()
     {
         $autoplay = $this->embed_autoplay ? '?autoplay=1' : '';
@@ -542,16 +517,14 @@ EOT;
 	    /***************************
              * CUSTOM CSS
              **************************/
-            $out =  '<style type="text/css">';
-            $out .= '.youtube-live-embed-wrapper{width:100%;height:0;position:relative;padding-bottom:56.5%;margin-bottom:1.15rem;}.youtube-live-embed-wrapper iframe{position:absolute;top:0;left:0;width:100%;height:100%;};';
-            $out .= '</style>';
+            wp_enqueue_style('wunrav-youtube-live-embed-style', plugins_url('wunrav-youtube-live-embed/includes/stylesheets/css/style.css'), __FILE__);
     
             /***************************
              * SLIDEOUT
              **************************/
             
             // creates a cookie to stop the alert from taking focus every time the page is loaded
-            $out .= '<script type="text/javascript" src="' . plugins_url('includes/live-feed-cookie.js', __FILE__) . '"></script>';
+            $out = '<script type="text/javascript" src="' . plugins_url('includes/live-feed-cookie.js', __FILE__) . '"></script>';
 
             // lets do the work
             $out .= '<input type="checkbox" id="slideout-button" name="slideout-button">';
@@ -563,7 +536,7 @@ EOT;
             $out .= '<a href="' . $this->options['alertBtnURL'] . '"><h4 class="lptv-blue-button-big">' . $this->options['alertBtn'] . '</h4></a>';
             $out .= '</div>';
             $out .= '</div>';
-            $out .= '<label for="slideout-button" id="slideout-trigger" class="slideout-trigger onAir"><img src="'. plugins_url('/arrow-triangle.png', __FILE__) .'" /><br />' . implode( "<br />", str_split("ON AIR") ) . '</label>';
+            $out .= '<label for="slideout-button" id="slideout-trigger" class="slideout-trigger onAir"><img src="'. plugins_url('images/arrow-triangle.png', __FILE__) .'" /><br />' . implode( "<br />", str_split("ON AIR") ) . '</label>';
             $out .= '</div>';
 
             echo $out;
