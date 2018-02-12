@@ -1,4 +1,5 @@
 .live-feed-slideout {
+    //display: none;
     position: fixed;
     top: 22%;
     width: 350px;
@@ -43,5 +44,68 @@
 
     .lptv-blue-button-big {
         margin: 1.15rem auto;
+    }
+}
+
+/* This is the trigger button */
+.slideout-trigger {
+    color: #fff;
+    line-height: 0.95em;
+    font-weight: bold;
+    text-align: center;
+    width: 8%;
+    background: #930000;
+    cursor: pointer;
+    display: inline-block;
+    margin-top: 10px;
+    padding: 6px 8px 6px 11px;
+    float: left;
+    border: 1px solid #930000;
+    border-radius: 6px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+
+    img {
+        width: 14px;
+        margin: 0 auto 6px 2px;
+    }
+
+    &.onAir {
+        animation-name: blink;
+        animation-duration: 500ms;
+        animation-timing-function: ease-in-out;
+        animation-direction: alternate;
+        animation-iteration-count: infinite;
+    }
+}
+
+@keyframes blink {
+    0% {
+        box-shadow: 6px 0 4px rgba(255, 0, 0, 0.9);
+    }
+    88% {
+        box-shadow: 6px 0 4px rgba(245, 0, 0, 0.8);
+    }
+    100% {
+        box-shadow: 6px 0 4px rgba(180, 0, 0, 0.6);
+    }
+}
+
+/* the tab is a label/checkbox. The checked state determines slideout position */
+input[type=checkbox]#slideout-button {
+    position: fixed;
+    left: -99px;
+
+    &:checked + .live-feed-slideout {
+        left: 0;
+
+        .slideout-trigger img {
+            -webkit-transition: all 400ms ease-in;
+            -moz-transition: all 400ms ease-in;
+            transition: all 400ms ease-in;
+            -webkit-transform: rotate(180deg);
+            -ms-transform: rotate(180deg);
+            transform: rotate(180deg);
+        }
     }
 }

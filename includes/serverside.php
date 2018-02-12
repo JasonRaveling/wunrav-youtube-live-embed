@@ -571,6 +571,12 @@ EOT;
 
         if ( $this->isLive() || $this->isTesting() ) {
 
+            /***************************
+             * CUSTOM CSS
+             **************************/
+            wp_enqueue_style('wunrav-youtube-live-embed-style', plugins_url('wunrav-youtube-live-embed/includes/stylesheets/css/style.css'), __FILE__);
+
+
             if ( $this->useJS() ) {
 
                 // Make this script work with the plugin
@@ -581,11 +587,6 @@ EOT;
                 }
 
             } else {
-
-                /***************************
-                 * CUSTOM CSS
-                 **************************/
-                wp_enqueue_style('wunrav-youtube-live-embed-style', plugins_url('wunrav-youtube-live-embed/includes/stylesheets/css/style.css'), __FILE__);
 
                 /***************************
                  * SLIDEOUT
