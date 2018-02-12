@@ -1,8 +1,8 @@
-This is a WordPress plugin that uses the YouTube API to detect if you're channel is live streaming and then embeds the YouTube live video on a page. A  modified version of [this repo](https://github.com/iacchus/youtube-live-embed) has been implemented here.
+This is a WordPress plugin that uses the YouTube API to detect if a channel is live streaming and then embeds the live YouTube video on a page using a shortcode.
 
 ## Usage
 
-Install the plugin in your plugins folder, enable it and then start using the `[live-youtube]` shortcode wherever you want it to appear. For now, we're hard coding a generic off-air message. More customizability may be added later. 
+Place this plugin in your plugins folder, enable it and then start using the `[live-youtube]` shortcode wherever you want live video to appear. A slidout will appear on every page of your site once the channel is live. The slideout message can be customized from the WordPress admin.
 
 #### 1. First parameter: CHANNEL ID
 
