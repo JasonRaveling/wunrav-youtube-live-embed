@@ -10,6 +10,7 @@ Author URI: https://webunraveling.com
 
 class WunravEmbedYoutubeLiveStreaming
 {
+
     public $pluginSlug;
 
     public $jsonResponse; // pure server response
@@ -29,13 +30,13 @@ class WunravEmbedYoutubeLiveStreaming
     public $embed_autoplay;
     public $embed_width;
     public $embed_height;
-
     public $live_video_id;
 
     public $options; // options entered into wp-admin form
 
     public function __construct()
     {
+
         $this->pluginSlug = 'wunrav-live-youtube-embed';
 
         // settings for API query
@@ -449,7 +450,7 @@ class WunravEmbedYoutubeLiveStreaming
 
     public function useJS()
     {
-        if ( $this->options['useJS'] ) {
+        if ( isset($this->options['useJS']) ) {
             return true;
         } else {
             return false;
@@ -490,7 +491,7 @@ class WunravEmbedYoutubeLiveStreaming
             $out .= '##################################################<br /></strong>';
             $out .= '<pre>' . print_r($this->options, true) . '</pre>';
             $out .= '<br /><strong>YouTube Retured JSON Below</strong><br />';
-            $out .= ( $this->objectResponse ? '<pre>' . json_encode($this->objectResponse, JSON_PRETTY_PRINT) . '</pre>' : '' );
+            $out .= ( $this->jsonResponse ? '<pre>' . $this->jsonResponse . '</pre>' : '' );
             $out .= '<strong>';
             $out .= '##################################################<br />';
             $out .= ' END DEBUGGING<br />';
@@ -505,7 +506,7 @@ class WunravEmbedYoutubeLiveStreaming
     public function offAirMessage()
     {
         /* allow user in put here eventually, using wp_editor().*/
-        $out = '<h4>If you don\'t see a video, we aren\'t live quite yet. <strong><a href="javascript:window.location.reload()">Refresh the page</a></strong> in a moment.</h4>';
+        $out = '<h4>We aren\'t live quite yet. If you\'re expecting us to stream soon, <strong><a href="javascript:window.location.reload()">refresh the page</a></strong> in a moment.</h4>';
 
         return $out;
     }
@@ -517,6 +518,7 @@ class WunravEmbedYoutubeLiveStreaming
             "channelId" => $this->getChannel()['channelID'],
             "eventType" => $this->eventType,
             "type" => $this->type,
+            "maxResults" => 1,
             "key" => $this->getChannel()['apiKey'],
         );
         $this->getQuery = http_build_query($this->queryData); // transform array of data in url query
@@ -526,21 +528,25 @@ class WunravEmbedYoutubeLiveStreaming
         $this->objectResponse = json_decode($this->jsonResponse); // decode as object
         //$this->arrayResponse = json_decode($this->jsonResponse, TRUE); // decode as array
 
-        if( $this->isLive() ) {
+        if( $this->isLive() && ! $this->useJS() ) {
 
             $this->live_video_id = $this->objectResponse->items[0]->id->videoId;
-            // $this->live_video_thumb_high = $this->objectResponse->items[0]->snippet->thumbnails->high->url;
 
             $this->embedCode();
+
+        } else {
+
+            // TODO TODO TODO TODO TODO TODO TODO TODO TODO
+            // add a timer here so we aren't constantly hitting the YouTube API
+
+            // use PHP to output some JSON... then JS will be called to create the embed
+            file_put_contents(dirname(__FILE__, 2) . '/channel.json', $this->jsonResponse);
+
         }
     }
 
-    public function isLive( $getOrNot = false )
+    public function isLive()
     {
-        if( $getOrNot == true ) {
-            $this->queryIt();
-        }
-
         if( count($this->objectResponse->items) > 0 ) {
             return true;
         } else {
@@ -552,6 +558,7 @@ class WunravEmbedYoutubeLiveStreaming
     {
         $autoplay = $this->embed_autoplay ? '?autoplay=1' : '';
 
+        // use PHP to generate the embed
         $this->embed_code = <<<EOT
 <iframe
         width="{$this->embed_width}"
