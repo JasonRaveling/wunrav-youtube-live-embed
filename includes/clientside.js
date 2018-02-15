@@ -1,4 +1,6 @@
 // This code has been copied from local machine... was used for testing and work stand alone. We need to work it in to the plugin
+//
+// BE SURE TO HAVE THE JS HIT CRON AND THEN QUERY OUR OWN JSON FOR THIS TO WORK
 
 var keepListening = setInterval(checkYouTube, 10000);
 
