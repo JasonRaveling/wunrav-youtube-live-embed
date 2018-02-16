@@ -50,13 +50,13 @@ class WunravEmbedYoutubeLiveStreaming
         $this->embed_height = "450";
         $this->embed_autoplay = true;
 
+        register_activation_hook( __FILE__, array($this, 'uninstall') );
+
         add_shortcode( 'live-youtube', array($this, 'shortcode') );
         add_action( 'wp_head', array($this, 'alert') );
         add_action( 'admin_menu', array($this, 'admin_menu_init') );
         add_action( 'admin_init', array($this, 'admin_page_init') );
         add_filter( 'cron_schedules', array($this, 'addWPCronSchedule') );
-        register_activation_hook( __FILE__, array($this, 'addWPCronEvent') );
-        add_action( 'wunrav-youtube-hook', array($this, 'doWPCron') );
 
         $this->queryIt();
     }
@@ -537,10 +537,15 @@ class WunravEmbedYoutubeLiveStreaming
 
         } elseif ( $this->useJS() ) {
 
-            echo '<h1 style="color:red;">queryIt detected we are using JS.</h1>';
-            add_action( 'wunrav-youtube-hook', array($this, 'doWPCron') );
+            //add_action( __FILE__, array($this, 'addWPCronEvent') );
 
+            if ( ! wp_next_scheduled( 'wunrav-youtube-hook' ) ) {
+                wp_schedule_event( time(), 'wunrav-30seconds', 'wunrav-youtube-hook' );
+            }
+
+            add_action( 'wunrav-youtube-hook', array($this, 'doWPCron') );
         }
+
     }
 
     public function isLive()
@@ -574,22 +579,14 @@ EOT;
     {
         $schedules['wunrav-30seconds'] = array(
             'interval' => 30,
-            'display' => esc_html__('Every 30 seconds'),
+            'display' => __('Every 30 seconds'),
         );
 
         return $schedules;
     }
 
-    public function addWPCronEvent()
-    {
-        if ( ! wp_next_scheduled( 'wunrav-youtube-hook' ) ) {
-            wp_schedule_event( time(), 'wunrav-30seconds', 'wunrav-youtube-hook' );
-        }
-    }
-
     public function doWPCron()
     {
-        echo '<h1 style="color:red;">WE JUST RAN THE CRON METHOD RIGH NOW ... CRONED (<code>doWPCron()</code> just ran)</h1>';
         file_put_contents(dirname(__FILE__, 2) . '/channel.json', $this->jsonResponse);
     }
 
@@ -639,6 +636,12 @@ EOT;
 
         }
 
+    }
+
+    public function uninstall()
+    {
+        // remove the wp-cron entry
+        wp_clear_scheduled_hook('my_hourly_event');
     }
 
 }
