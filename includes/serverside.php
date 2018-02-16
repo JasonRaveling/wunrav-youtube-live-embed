@@ -50,7 +50,7 @@ class WunravEmbedYoutubeLiveStreaming
         $this->embed_height = "450";
         $this->embed_autoplay = true;
 
-        register_activation_hook( __FILE__, array($this, 'uninstall') );
+        register_deactivation_hook( __FILE__, array($this, 'deactivate') );
 
         add_shortcode( 'live-youtube', array($this, 'shortcode') );
         add_action( 'wp_head', array($this, 'alert') );
@@ -537,8 +537,6 @@ class WunravEmbedYoutubeLiveStreaming
 
         } elseif ( $this->useJS() ) {
 
-            //add_action( __FILE__, array($this, 'addWPCronEvent') );
-
             if ( ! wp_next_scheduled( 'wunrav-youtube-hook' ) ) {
                 wp_schedule_event( time(), 'wunrav-30seconds', 'wunrav-youtube-hook' );
             }
@@ -638,10 +636,10 @@ EOT;
 
     }
 
-    public function uninstall()
+    public function deactivate()
     {
         // remove the wp-cron entry
-        wp_clear_scheduled_hook('my_hourly_event');
+        wp_clear_scheduled_hook('wunrav-youtube-hook');
     }
 
 }
