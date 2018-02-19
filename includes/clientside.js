@@ -1,30 +1,39 @@
-// This code has been copied from local machine... was used for testing and work stand alone. We need to work it in to the plugin
-//
-// BE SURE TO HAVE THE JS HIT CRON AND THEN QUERY OUR OWN JSON FOR THIS TO WORK
+/*
+ * When enabled in WP admin settings, this JS will be used to ping WP cron
+ * and then check the JSON pulled from the YouTube API. The API calls are
+ * being done serverside and saved to a file called channel.json
+ */
 
 var keepListening = setInterval(checkYouTube, 10000);
 
+var siteURL = document.domain;
+var pluginURL = siteURL + "/wp-content/plugins/wunrav-youtube-live-embed";
+
+checkYouTube(); // initial check before interval checking
+
 function checkYouTube() {
 
-    // jason raveling channel ID: UC_x5XG1OV2P6uZZ5FSM9Ttw
-    // jason channel ID: UCqLNcDDtg_FxIxw4okQBu-A
+    jQuery.get('//' + siteURL + '/wp-cron.php');
 
-    // this needs to change to JSON request to our server.... our server should be using the API key with its IP whitelisted
-    jQuery.getJSON('https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=UCqLNcDDtg_FxIxw4okQBu-A&eventType=live&maxResults=1&type=video&key=AIzaSyApbZwsiTysEw6lP-5eYNEWQUspWmBmt_I',
-            function(data) {
+    setTimeout( function() { // give wp-cron a moment to query the API and write JSON
 
-                if ( data.items[0] == null ) {
-                    jQuery('#msg').text("When the channel goes live, a video will appear here.");
-                    return;
-                } else {
-                    jQuery('#msg').text("The channel is live. keepListening = " + keepListening);
-                    clearInterval(keepListening);
-                }
+        jQuery.getJSON('//' + pluginURL + '/channel.json', // JSON created by serverside.php
+                function(data) {
 
-                var vidURL = 'https://www.youtube.com/embed/' + data.items[0].id.videoId + '?autoplay=1&color=white';
-                jQuery('#liveYTFeed').attr('src', vidURL);
-                jQuery('#json').text(JSON.stringify(data, null, "    "));
-            });
+                    if ( data.items[0] == null ) {
+                        return;
+                    } else {
+                        clearInterval(keepListening);
+
+                        // this only runs if the above if statement goes to the else
+                        var vidURL = 'https://www.youtube.com/embed/' + data.items[0].id.videoId + '?autoplay=1&color=white';
+                        jQuery('#wunrav-youtube-embed-iframe').attr('src', vidURL);
+                        jQuery('#wunrav-youtube-embed-iframe').css('display', 'inline-block');
+                        jQuery('#wunrav-youtube-embed-offair').remove();
+                    }
+
+                });
+    }, 1500);
+
+    return;
 }
-
-checkYouTube(); // initial check

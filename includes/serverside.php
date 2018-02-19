@@ -26,8 +26,6 @@ class WunravEmbedYoutubeLiveStreaming
     public $eventType;
     public $type;
 
-    public $embed_code;
-    public $embed_autoplay;
     public $embed_width;
     public $embed_height;
     public $live_video_id;
@@ -48,12 +46,12 @@ class WunravEmbedYoutubeLiveStreaming
         // settings for embed
         $this->embed_width = "800";
         $this->embed_height = "450";
-        $this->embed_autoplay = true;
 
         register_deactivation_hook( __FILE__, array($this, 'deactivate') );
 
         add_shortcode( 'live-youtube', array($this, 'shortcode') );
         add_action( 'wp_head', array($this, 'alert') );
+        add_action( 'wp_head', array($this, 'loadScripts') );
         add_action( 'admin_menu', array($this, 'admin_menu_init') );
         add_action( 'admin_init', array($this, 'admin_page_init') );
         add_filter( 'cron_schedules', array($this, 'addWPCronSchedule') );
@@ -434,7 +432,8 @@ class WunravEmbedYoutubeLiveStreaming
         if ( $this->isLive() ) {
             echo $this->embedCode();
         } else {
-            echo $this->offAirMessage();
+            /* allow user in put here eventually, using wp_editor().*/
+            $out = '<h4>We aren\'t live quite yet. If you\'re expecting us to stream soon, <strong><a href="javascript:window.location.reload()">refresh the page</a></strong> in a moment.</h4>';
         }
 
         echo $this->debugging();
@@ -507,14 +506,6 @@ class WunravEmbedYoutubeLiveStreaming
         }
     }
 
-    public function offAirMessage()
-    {
-        /* allow user in put here eventually, using wp_editor().*/
-        $out = '<h4>We aren\'t live quite yet. If you\'re expecting us to stream soon, <strong><a href="javascript:window.location.reload()">refresh the page</a></strong> in a moment.</h4>';
-
-        return $out;
-    }
-
     public function queryIt()
     {
         $this->queryData = array(
@@ -531,11 +522,9 @@ class WunravEmbedYoutubeLiveStreaming
         $this->jsonResponse = file_get_contents($this->queryString); // pure server response
         $this->objectResponse = json_decode($this->jsonResponse); // decode as object
 
-        if( $this->isLive() && ! $this->useJS() ) {
+        $this->live_video_id = $this->objectResponse->items[0]->id->videoId;
 
-            $this->live_video_id = $this->objectResponse->items[0]->id->videoId;
-
-        } elseif ( $this->useJS() ) {
+        if ( $this->useJS() ) {
 
             if ( ! wp_next_scheduled( 'wunrav-youtube-hook' ) ) {
                 wp_schedule_event( time(), 'wunrav-30seconds', 'wunrav-youtube-hook' );
@@ -557,20 +546,26 @@ class WunravEmbedYoutubeLiveStreaming
 
     public function embedCode()
     {
-        $autoplay = $this->embed_autoplay ? '?autoplay=1' : '';
+        if ( ! $this->useJS() ) {
 
-        // use PHP to generate the embed
-        $this->embed_code = <<<EOT
+            $embed = <<<EOT
 <iframe
         width="{$this->embed_width}"
         height="{$this->embed_height}"
-        src="//youtube.com/embed/{$this->live_video_id}{$autoplay}"
+        src="//youtube.com/embed/{$this->live_video_id}?autoplay=1&color=white"
         frameborder="0"
         allowfullscreen>
 </iframe>
 EOT;
 
-        return $this->embed_code;
+        } else {
+            
+            $embed  = '<h4 id="wunrav-youtube-embed-offair">We aren\'t live streaming quite yet. As soon as we go live, the video will appear.</h4>'; 
+            $embed .= '<iframe id="wunrav-youtube-embed-iframe" width="' . $this->embed_width . '" height="' . $this->embed_height . '" style="display:none;"></iframe>';            
+
+        }
+
+        return $embed;
     }
 
     public function addWPCronSchedule()
@@ -594,28 +589,11 @@ EOT;
         if ( $this->isLive() || $this->isTesting() ) {
 
             /***************************
-             * CUSTOM CSS
-             **************************/
-            wp_enqueue_style('wunrav-youtube-live-embed-style', plugins_url('wunrav-youtube-live-embed/includes/stylesheets/css/style.css'), __FILE__);
-
-
-            if ( $this->useJS() ) {
-
-                // Make this script work with the plugin
-                wp_enqueue_script('wunrav-youtube-live-embed-clientside', plugins_url('wunrav-youtube-live-embed/includes/clientside.js'), __FILE__);
-
-                if ($this->loadjQuery() ) {
-                    wp_enqueue_script('wunrav-youtube-live-embed-jquery', plugins_url('wunrav-youtube-live-embed/includes/jquery-3.3.1.min.js'), __FILE__);
-                }
-
-            }
-
-            /***************************
              * SLIDEOUT
              **************************/
 
             // creates a cookie to stop the alert from taking focus every time the page is loaded
-            $out = '<script type="text/javascript" src="' . plugins_url('includes/live-feed-cookie.js', __FILE__) . '"></script>';
+            $out = '<script type="text/javascript" src="' . plugins_url('/live-feed-cookie.js', __FILE__) . '"></script>';
 
             // lets do the work
             $out .= '<input type="checkbox" id="slideout-button" name="slideout-button">';
@@ -631,9 +609,22 @@ EOT;
             $out .= '</div>';
 
             echo $out;
-
         }
+    }
 
+    public function loadScripts()
+    {
+        wp_enqueue_style('wunrav-youtube-live-embed-style', plugins_url('wunrav-youtube-live-embed/includes/stylesheets/css/style.css'), __FILE__);
+
+        if ( $this->useJS() ) {
+
+            // Make this script work with the plugin
+            wp_enqueue_script('wunrav-youtube-live-embed-clientside', plugins_url('wunrav-youtube-live-embed/includes/clientside.js'), __FILE__);
+
+            if ($this->loadjQuery() ) {
+                wp_enqueue_script('wunrav-youtube-live-embed-jquery', plugins_url('wunrav-youtube-live-embed/includes/jquery-3.3.1.min.js'), __FILE__);
+            }
+        }
     }
 
     public function deactivate()
