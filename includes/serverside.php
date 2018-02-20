@@ -3,7 +3,7 @@
 Plugin Name: YouTube Live Streaming Auto Embed
 Description: Detects when a YouTube account is live streaming and creates an embeded video for the stream using a shortcode. (Supports YouTube APIv3)
 Plugin URI: https://github.com/webunraveling/wunrav-youtube-live-streaming-embed
-Version: 0.2.1
+Version: 1.0.0
 Author: Jason Raveling
 Author URI: https://webunraveling.com
 */
@@ -11,47 +11,35 @@ Author URI: https://webunraveling.com
 class WunravEmbedYoutubeLiveStreaming
 {
 
-    public $pluginSlug;
+    public $pluginSlug = 'wunrav-youtube-live-embed';
 
     public $jsonResponse; // pure server response
     public $objectResponse; // response decoded as object
 
+    public $getAddress =  "https://www.googleapis.com/youtube/v3/search?"; // address to request GET
     public $queryData; // query values as an array
-    public $getAddress; // address to request GET
     public $getQuery; // data to request, encoded
 
     public $queryString; // Address + Data to request
 
-    public $part;
-    public $eventType;
-    public $type;
+    // args for API query
+    public $part = 'id,snippet';
+    public $eventType = 'live';
+    public $type = 'video';
 
-    public $embed_width;
-    public $embed_height;
+    public $embed_width = 800;
+    public $embed_height = 450;
     public $live_video_id;
 
     public $options; // options entered into wp-admin form
 
     public function __construct()
     {
-
-        $this->pluginSlug = 'wunrav-live-youtube-embed';
-
-        // settings for API query
-        $this->part = "id,snippet";
-        $this->eventType = "live";
-        $this->type = "video";
-        $this->getAddress = "https://www.googleapis.com/youtube/v3/search?";
-
-        // settings for embed
-        $this->embed_width = "800";
-        $this->embed_height = "450";
-
         register_deactivation_hook( __FILE__, array($this, 'deactivate') );
 
-        add_shortcode( 'live-youtube', array($this, 'shortcode') );
-        add_action( 'wp_head', array($this, 'alert') );
+        add_shortcode( 'youtube-live', array($this, 'shortcode') );
         add_action( 'wp_head', array($this, 'loadScripts') );
+        add_action( 'wp_head', array($this, 'alert') );
         add_action( 'admin_menu', array($this, 'admin_menu_init') );
         add_action( 'admin_init', array($this, 'admin_page_init') );
         add_filter( 'cron_schedules', array($this, 'addWPCronSchedule') );
@@ -82,7 +70,7 @@ class WunravEmbedYoutubeLiveStreaming
 
         echo '<div class="wrap">';
         echo '<h1>YouTube Auto Live Embed</h1>';
-        echo '<p>To use this plugin, just place the <code>[live-youtube]</code> shortcode in the page or post you would like your live feed to appear. Instructions on <a href="">how to setup this plugin</a> are available on GitHub.</p>';
+        echo '<p>To use this plugin, just place the <code>[youtube-live]</code> shortcode in the page or post you would like your live feed to appear. Instructions on <a href="">how to setup this plugin</a> are available on GitHub.</p>';
         if ( $this->isTesting() ) {
             echo '<h2 style="color:red;">NOTE: Your testing account is enabled. Your "on-air" alert will always be active while testing is enabled.</h2>';
         }
@@ -422,18 +410,28 @@ class WunravEmbedYoutubeLiveStreaming
 
     /**************************************************
      ************** FRONT END *************************
-     **************************************************
-     * Begin using the info to output embed code or a
-     * default message if no live feed is occuring
      *************************************************/
 
     public function shortcode()
     {
-        if ( $this->isLive() ) {
-            echo $this->embedCode();
-        } else {
-            /* allow user in put here eventually, using wp_editor().*/
-            $out = '<h4>We aren\'t live quite yet. If you\'re expecting us to stream soon, <strong><a href="javascript:window.location.reload()">refresh the page</a></strong> in a moment.</h4>';
+        printf('<iframe id="wunrav-youtube-embed-iframe" width="%s" height="%s" %s src="%s"></iframe>',
+            $this->embed_width, // iframe width
+            $this->embed_height, // iframe height
+            ($this->useJS() ? ' style="display:none;"' : ''), // hide it since JS will reveal when live
+            ($this->useJS() ? '' : '//youtube.com/embed/' . $this->live_video_id . '?autoplay=1&color=white')
+        );
+
+        if ( !$this->isLive() ) {
+
+            // off air message... one day this will be in WP admin
+            echo '<div id="wunrav-youtube-embed-offair">';
+            echo '<h3>We aren\'t live quite yet.</h3>';
+            if ( $this->useJS() ) {
+                echo '<h4>As soon as we start, our live stream will appear.</h4>';
+            } else {
+                echo '<h4>If you\'re expecting us to start soon, <strong><a href="javascript:window.location.reload()">refresh the page</a></strong> in a moment.</h4>';
+            }
+            echo '</div>';
         }
 
         echo $this->debugging();
@@ -522,7 +520,7 @@ class WunravEmbedYoutubeLiveStreaming
         $this->jsonResponse = file_get_contents($this->queryString); // pure server response
         $this->objectResponse = json_decode($this->jsonResponse); // decode as object
 
-        $this->live_video_id = $this->objectResponse->items[0]->id->videoId;
+        $this->live_video_id = ( isset($this->objectResponse->items[0]->id->videoId) ? $this->objectResponse->items[0]->id->videoId : '' );
 
         if ( $this->useJS() ) {
 
@@ -532,7 +530,6 @@ class WunravEmbedYoutubeLiveStreaming
 
             add_action( 'wunrav-youtube-hook', array($this, 'doWPCron') );
         }
-
     }
 
     public function isLive()
@@ -542,30 +539,6 @@ class WunravEmbedYoutubeLiveStreaming
         } else {
             return false;
         }
-    }
-
-    public function embedCode()
-    {
-        if ( ! $this->useJS() ) {
-
-            $embed = <<<EOT
-<iframe
-        width="{$this->embed_width}"
-        height="{$this->embed_height}"
-        src="//youtube.com/embed/{$this->live_video_id}?autoplay=1&color=white"
-        frameborder="0"
-        allowfullscreen>
-</iframe>
-EOT;
-
-        } else {
-            
-            $embed  = '<h4 id="wunrav-youtube-embed-offair">We aren\'t live streaming quite yet. As soon as we go live, the video will appear.</h4>'; 
-            $embed .= '<iframe id="wunrav-youtube-embed-iframe" width="' . $this->embed_width . '" height="' . $this->embed_height . '" style="display:none;"></iframe>';            
-
-        }
-
-        return $embed;
     }
 
     public function addWPCronSchedule()
@@ -580,24 +553,18 @@ EOT;
 
     public function doWPCron()
     {
+        // Only used when JS is enabled. Using WP cron to put JSON into a file 
+        // that the JS will use.
         file_put_contents(dirname(__FILE__, 2) . '/channel.json', $this->jsonResponse);
     }
 
-    // creates a slideout alert on every page
     public function alert()
     {
-        if ( $this->isLive() || $this->isTesting() ) {
+        global $post;
 
-            /***************************
-             * SLIDEOUT
-             **************************/
-
-            // creates a cookie to stop the alert from taking focus every time the page is loaded
-            $out = '<script type="text/javascript" src="' . plugins_url('/live-feed-cookie.js', __FILE__) . '"></script>';
-
-            // lets do the work
-            $out .= '<input type="checkbox" id="slideout-button" name="slideout-button">';
-            $out .= '<div class="live-feed-slideout" onload="lptv_slidout_onload()">';
+        if ( ! has_shortcode($post->post_content, 'youtube-live') ) {
+            $out  = '<input type="checkbox" id="slideout-button" name="slideout-button">';
+            $out .= '<div class="live-feed-slideout" id="wunrav-youtube-embed-slideout" onload="lptv_slidout_onload()"' . ( $this->isLive() ? '' : ' style="display:none;"' ) . '>';
             $out .= '<div class="slideout-content-wrap">';
             $out .= '<div class="slideout-content">';
             $out .= '<h2>' . $this->options['alertTitle'] . '</h2>';
@@ -609,6 +576,8 @@ EOT;
             $out .= '</div>';
 
             echo $out;
+        } else {
+            return;
         }
     }
 
@@ -616,8 +585,12 @@ EOT;
     {
         wp_enqueue_style('wunrav-youtube-live-embed-style', plugins_url('wunrav-youtube-live-embed/includes/stylesheets/css/style.css'), __FILE__);
 
-        if ( $this->useJS() ) {
+        if ( $this->isLive() || $this->isTesting() ) {
+            wp_enqueue_script('wunrav-youtube-live-embed-cookie', plugins_url('wunrav-youtube-live-embed/includes/live-feed-cookie.js'), __FILE__);
+        }
 
+        if ( $this->useJS() ) {
+            //
             // Make this script work with the plugin
             wp_enqueue_script('wunrav-youtube-live-embed-clientside', plugins_url('wunrav-youtube-live-embed/includes/clientside.js'), __FILE__);
 

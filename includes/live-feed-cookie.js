@@ -2,7 +2,7 @@
 // if a user closes the slideout the cookie tells the browser not to slide out again.
 var $ = jQuery;
 
-if ( ! $.cookie.indexOf('SubdueLivefeedSlideout=') )  {
+if ( document.cookie.indexOf('SubdueLivefeedSlideout=') >= 0 )  {
     $(document).ready(function(){
         setTimeout(function(){ $('#slideout-button').prop('checked', true); }, 6000);
 

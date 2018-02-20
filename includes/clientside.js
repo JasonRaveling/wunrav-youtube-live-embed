@@ -23,17 +23,18 @@ function checkYouTube() {
                     if ( data.items[0] == null ) {
                         return;
                     } else {
-                        clearInterval(keepListening);
-
-                        // this only runs if the above if statement goes to the else
                         var vidURL = 'https://www.youtube.com/embed/' + data.items[0].id.videoId + '?autoplay=1&color=white';
+
+                        jQuery('#wunrav-youtube-embed-slideout').css('display', 'block');
                         jQuery('#wunrav-youtube-embed-iframe').attr('src', vidURL);
                         jQuery('#wunrav-youtube-embed-iframe').css('display', 'inline-block');
                         jQuery('#wunrav-youtube-embed-offair').remove();
+
+                        clearInterval(keepListening);
                     }
 
                 });
-    }, 1500);
+    }, 1700);
 
     return;
 }
