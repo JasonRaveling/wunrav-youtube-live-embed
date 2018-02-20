@@ -414,15 +414,16 @@ class WunravEmbedYoutubeLiveStreaming
 
     public function shortcode()
     {
-        printf('<iframe id="wunrav-youtube-embed-iframe" width="%s" height="%s" %s src="%s"></iframe>',
-            $this->embed_width, // iframe width
-            $this->embed_height, // iframe height
-            ($this->useJS() ? ' style="display:none;"' : ''), // hide it since JS will reveal when live
-            ($this->useJS() ? '' : '//youtube.com/embed/' . $this->live_video_id . '?autoplay=1&color=white')
-        );
+        if ( $this->isLive() || $this->useJS() ) {
+            printf('<iframe id="wunrav-youtube-embed-iframe" width="%s" height="%s" %s src="%s"></iframe>',
+                $this->embed_width, // iframe width
+                $this->embed_height, // iframe height
+                ($this->useJS() ? ' style="display:none;"' : ''), // hide it since JS will reveal when live
+                ($this->useJS() ? '' : '//youtube.com/embed/' . $this->live_video_id . '?autoplay=1&color=white')
+            );
+        }
 
-        if ( !$this->isLive() ) {
-
+        if ( ! $this->isLive() ) {
             // off air message... one day this will be in WP admin
             echo '<div id="wunrav-youtube-embed-offair">';
             echo '<h3>We aren\'t live quite yet.</h3>';
@@ -561,8 +562,9 @@ class WunravEmbedYoutubeLiveStreaming
     public function alert()
     {
         global $post;
+        $postContent = ( isset($post->post_content) ? $post->content : false );
 
-        if ( ! has_shortcode($post->post_content, 'youtube-live') ) {
+        if ( ! has_shortcode($postContent, 'youtube-live') ) {
             $out  = '<input type="checkbox" id="slideout-button" name="slideout-button">';
             $out .= '<div class="live-feed-slideout" id="wunrav-youtube-embed-slideout" onload="lptv_slidout_onload()"' . ( $this->isLive() ? '' : ' style="display:none;"' ) . '>';
             $out .= '<div class="slideout-content-wrap">';
