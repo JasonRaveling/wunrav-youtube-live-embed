@@ -4,7 +4,7 @@
  * being done serverside and saved to a file called channel.json
  */
 
-var keepListening = setInterval(checkYouTube, 10000);
+var keepListening = setInterval(checkYouTube, 18000);
 
 var siteURL = document.domain;
 var pluginURL = siteURL + "/wp-content/plugins/wunrav-youtube-live-embed";
