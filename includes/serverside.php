@@ -72,7 +72,7 @@ class WunravEmbedYoutubeLiveStreaming
         echo '<h1>YouTube Auto Live Embed</h1>';
         echo '<p>To use this plugin, just place the <code>[youtube-live]</code> shortcode in the page or post you would like your live feed to appear. Instructions on <a href="">how to setup this plugin</a> are available on GitHub.</p>';
         if ( $this->isTesting() ) {
-            echo '<h2 style="color:red;">NOTE: Your testing account is enabled. Your "on-air" alert will always be active while testing is enabled.</h2>';
+            echo '<h2 style="color:red;">NOTE: Your testing account '  . ( $this->isTesting() == 2 ? 'and debugging are both' : 'is' ) . ' enabled.</h2>';
         }
         echo '<form method="post" action="options.php">';
         settings_fields( $this->pluginSlug . '_settings' );
@@ -415,7 +415,7 @@ class WunravEmbedYoutubeLiveStreaming
     public function shortcode()
     {
         if ( $this->isLive() || $this->useJS() ) {
-            printf('<iframe id="wunrav-youtube-embed-iframe" width="%s" height="%s" %s src="%s"></iframe>',
+            printf('<div class="wunrav-youtube-embed-wrapper"><iframe id="wunrav-youtube-embed-iframe" width="%s" height="%s" %s src="%s" allowfullscreen></iframe></div>',
                 $this->embed_width, // iframe width
                 $this->embed_height, // iframe height
                 ($this->useJS() ? ' style="display:none;"' : ''), // hide it since JS will reveal when live
@@ -488,7 +488,6 @@ class WunravEmbedYoutubeLiveStreaming
             $out = '<strong><br />';
             $out .= '##################################################<br />';
             $out .= ' DEBUGGING<br />';
-            $out .= ' note: slideout is always on when debugging is on<br />';
             $out .= '##################################################<br /></strong>';
             $out .= '<pre>' . print_r($this->options, true) . '</pre>';
             $out .= '<br /><strong>YouTube Retured JSON Below</strong><br />';
@@ -586,10 +585,7 @@ class WunravEmbedYoutubeLiveStreaming
     public function loadScripts()
     {
         wp_enqueue_style('wunrav-youtube-live-embed-style', plugins_url('wunrav-youtube-live-embed/includes/stylesheets/css/style.css'), __FILE__);
-
-        if ( $this->isLive() || $this->isTesting() ) {
-            wp_enqueue_script('wunrav-youtube-live-embed-cookie', plugins_url('wunrav-youtube-live-embed/includes/live-feed-cookie.js'), __FILE__);
-        }
+        wp_enqueue_script('wunrav-youtube-live-embed-cookie', plugins_url('wunrav-youtube-live-embed/includes/live-feed-cookie.js'), __FILE__);
 
         if ( $this->useJS() ) {
             //
