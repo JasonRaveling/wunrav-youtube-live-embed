@@ -3,7 +3,7 @@
 Plugin Name: YouTube Live Streaming Auto Embed
 Description: Detects when a YouTube account is live streaming and creates an embeded video for the stream using a shortcode. (Supports YouTube APIv3)
 Plugin URI: https://github.com/webunraveling/wunrav-youtube-live-streaming-embed
-Version: 1.1.0
+Version: 1.1.1
 Author: Jason Raveling
 Author URI: https://webunraveling.com
 */
