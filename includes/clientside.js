@@ -13,7 +13,7 @@ checkYouTube(); // initial check before interval checking
 
 function checkYouTube() {
 
-    jQuery.get('//' + siteURL + '/wp-cron.php');
+    jQuery.get('//' + siteURL + '/wp-cron.php'); // server will query the API
 
     setTimeout( function() { // give wp-cron a moment to query the API and write JSON
 
