@@ -496,7 +496,6 @@ class WunravEmbedYoutubeLiveStreaming
             $out .= '##################################################<br />';
             $out .= ' END DEBUGGING<br />';
             $out .= '##################################################<br /></strong>';
-            $out .= print_r(wp_get_schedules());
             
             return $out;
         } else {
@@ -517,16 +516,32 @@ class WunravEmbedYoutubeLiveStreaming
         $this->getQuery = http_build_query($this->queryData); // transform array of data in url query
         $this->queryString = $this->getAddress . $this->getQuery;
 
+<<<<<<< HEAD
         if ( ! wp_next_scheduled( 'wunrav-youtube-hook' ) ) {
             wp_schedule_event( time(), 'wunrav-30seconds', 'wunrav-youtube-hook' );
         }
 
         add_action( 'wunrav-youtube-hook', array($this, 'doWPCron') );
+=======
+        // querying the YouTube API with either PHP (on page) load or JS (using WP cron)
+        if ( ! $this->useJS() ) {
+            $this->jsonResponse = file_get_contents($this->queryString); // pure server response
+            $this->objectResponse = json_decode($this->jsonResponse); // decode as object
+            $this->live_video_id = ( isset($this->objectResponse->items[0]->id->videoId) ? $this->objectResponse->items[0]->id->videoId : '' );
+        } else {
+            if ( ! wp_next_scheduled( 'wunrav-youtube-hook' ) ) {
+                wp_schedule_event( time(), 'wunrav-30seconds', 'wunrav-youtube-hook' );
+            }
+
+            add_action( 'wunrav-youtube-hook', array($this, 'doWPCron') );
+        }
+
+>>>>>>> testing
     }
 
     public function isLive()
     {
-        if( count($this->objectResponse->items) > 0 ) {
+        if( isset($this->objectResponse->items) ) {
             return true;
         } else {
             return false;
@@ -547,6 +562,7 @@ class WunravEmbedYoutubeLiveStreaming
     {
         $this->jsonResponse = file_get_contents($this->queryString); // pure server response
         $this->objectResponse = json_decode($this->jsonResponse); // decode as object
+<<<<<<< HEAD
         $this->live_video_id = ( isset($this->objectResponse->items[0]->id->videoId) ? $this->objectResponse->items[0]->id->videoId : '' );
 
 
@@ -554,6 +570,11 @@ class WunravEmbedYoutubeLiveStreaming
             // write the JSON to a file for JS to grab
             file_put_contents(dirname(__FILE__, 2) . '/channel.json', $this->jsonResponse);
         }
+=======
+
+        // Write JSON from the YouTube API to a file for our JS to access
+        file_put_contents(dirname(__FILE__, 2) . '/channel.json', $this->jsonResponse);
+>>>>>>> testing
     }
 
     public function alert()
