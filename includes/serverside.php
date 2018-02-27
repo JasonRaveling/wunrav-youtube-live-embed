@@ -555,8 +555,6 @@ class WunravEmbedYoutubeLiveStreaming
         $this->jsonResponse = file_get_contents($this->queryString); // pure server response
         $this->objectResponse = json_decode($this->jsonResponse); // decode as object
 
-        $this->live_video_id = ( isset($this->objectResponse->items[0]->id->videoId) ? $this->objectResponse->items[0]->id->videoId : '' );
-
         // Write JSON from the YouTube API to a file for our JS to access
         file_put_contents(dirname(__FILE__, 2) . '/channel.json', $this->jsonResponse);
     }
