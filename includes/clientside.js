@@ -17,7 +17,7 @@ function checkYouTube() {
 
     setTimeout( function() { // give wp-cron a moment to query the API and write JSON
 
-        jQuery.getJSON('//' + pluginURL + '/channel.json', // JSON created by serverside.php
+        jQuery.getJSON('//' + pluginURL + '/channel.json?nocache=' + Date.now(), // JSON created by serverside.php
                 function(data) {
 
                     if ( data.items[0] == null ) {
