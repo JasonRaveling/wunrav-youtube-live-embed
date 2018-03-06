@@ -1,5 +1,4 @@
 .live-feed-slideout {
-    //display: none;
     position: fixed;
     top: 22%;
     width: 350px;
@@ -54,6 +53,7 @@
     font-weight: bold;
     text-align: center;
     width: 8%;
+    max-width: 30px;
     background: #930000;
     cursor: pointer;
     display: inline-block;
@@ -110,32 +110,18 @@ input[type=checkbox]#slideout-button {
     }
 }
 
-.wunrav-youtube-embed-wrapper {
-    max-width: 100%;
-    position: relative;
-    margin-bottom: 1.15em;
-    display: inline-block;
-
-    iframe {
-        position: relative;
-        max-width: 100%;
-        max-height: 100%;
-    }
-}
-
 @media only screen and (max-width: 768px) {
 
-    .wunrav-youtube-embed-wrapper {
-        height: 0;
-        padding-bottom: 56.2%;
-        display: block;
+    #wunrav-youtube-embed-slideout {
+        top: 65%;
 
-        iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
+        .slideout-trigger {
+            max-width:19px;
+
+            &.onAir {}
         }
     }
+
 
 }
 

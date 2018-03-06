@@ -572,7 +572,7 @@ class WunravEmbedYoutubeLiveStreaming
             $out .= '<a href="' . $this->options['alertBtnURL'] . '"><h4 class="lptv-blue-button-big">' . $this->options['alertBtn'] . '</h4></a>';
             $out .= '</div>';
             $out .= '</div>';
-            $out .= '<label for="slideout-button" id="slideout-trigger" class="slideout-trigger onAir"><img src="'. plugins_url('images/arrow-triangle.png', __FILE__) .'" /><br />' . implode( "<br />", str_split("ON AIR") ) . '</label>';
+            $out .= '<label for="slideout-button" id="slideout-trigger" class="slideout-trigger onAir"><img src="'. plugins_url('images/arrow-triangle.png', __FILE__) .'" /><br />' . implode( "<br />", str_split("LIVE") ) . '</label>';
             $out .= '</div>';
 
             echo $out;
