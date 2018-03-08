@@ -315,7 +315,7 @@ class WunravEmbedYoutubeLiveStreaming
     {
         printf(
             '<input type="text" id="alertTitle" name="' . $this->pluginSlug . '_settings[alertTitle]" value="%s" size="60" maxlength="500" />',
-            isset( $this->options['alertTitle'] ) ? esc_attr( $this->options['alertTitle']) : ''
+            isset( $this->options['alertTitle'] ) ? esc_attr( $this->options['alertTitle']) : 'We Are Live!'
         );
     }
 
@@ -323,7 +323,7 @@ class WunravEmbedYoutubeLiveStreaming
     {
         printf(
             '<textarea id="alertMsg" name="' . $this->pluginSlug . '_settings[alertMsg]" cols="65" rows="3" maxlength="800">%s</textarea>',
-            isset( $this->options['alertMsg'] ) ? esc_attr( $this->options['alertMsg']) : ''
+            isset( $this->options['alertMsg'] ) ? esc_attr( $this->options['alertMsg']) : 'A brief message that we are live streaming.'
         );
     }
 
@@ -331,7 +331,7 @@ class WunravEmbedYoutubeLiveStreaming
     {
         printf(
             '<input type="text" id="alertBtn" name="' . $this->pluginSlug . '_settings[alertBtn]" value="%s" size="60" maxlength="500" />',
-            isset( $this->options['alertBtn'] ) ? esc_attr( $this->options['alertBtn']) : ''
+            isset( $this->options['alertBtn'] ) ? esc_attr( $this->options['alertBtn']) : 'Button Text'
         );
     }
 
@@ -339,14 +339,14 @@ class WunravEmbedYoutubeLiveStreaming
     {
         printf(
             '<input type="text" id="alertBtnURL" name="' . $this->pluginSlug . '_settings[alertBtnURL]" value="%s" size="60" maxlength="800" placeholder="must start with http:// or https://" />',
-            isset( $this->options['alertBtnURL'] ) ? esc_attr( $this->options['alertBtnURL']) : ''
+            isset( $this->options['alertBtnURL'] ) ? esc_attr( $this->options['alertBtnURL']) : 'https://webunraveling.com'
         );
     }
 
     public function useJS_callback()
     {
         printf(
-            '<input type="checkbox" id="useJS" name="' . $this->pluginSlug . '_settings[useJS]" %s />Enables auto loading.',
+            '<input type="checkbox" id="useJS" name="' . $this->pluginSlug . '_settings[useJS]" %s />Enables auto loading. (requires JQuery)',
             checked ( isset($this->options['useJS']), true, false )
         );
     }
@@ -471,12 +471,21 @@ class WunravEmbedYoutubeLiveStreaming
     {
         $this->options = get_option( $this->pluginSlug . '_settings' );
 
-        if ( $this->isTesting() ) {
+        if ( null === $this->options['channelID'] ||
+             null === $this->options['apiKey'] ) {
+
+                 return null;
+
+        } elseif ( $this->isTesting() && null !== $this->options['channelID-testing'] && null !== $this->options['apiKey-testing'] ) {
+
             $out['channelID'] = $this->options['channelID-testing'];
             $out['apiKey'] = $this->options['apiKey-testing'];
+
         } else {
+
             $out['channelID'] = $this->options['channelID'];
             $out['apiKey'] = $this->options['apiKey'];
+
         }
 
         return $out;
@@ -505,29 +514,34 @@ class WunravEmbedYoutubeLiveStreaming
 
     public function queryIt()
     {
-        $this->queryData = array(
-            "part" => $this->part,
-            "channelId" => $this->getChannel()['channelID'],
-            "key" => $this->getChannel()['apiKey'],
-            "eventType" => $this->eventType,
-            "type" => $this->type,
-            "maxResults" => 1,
-        );
-        $this->getQuery = http_build_query($this->queryData); // transform array of data in url query
-        $this->queryString = $this->getAddress . $this->getQuery;
+        if ( null !== $this->getChannel() ) { 
 
-        // querying the YouTube API with either PHP (on page) load or JS (using WP cron)
-        if ( ! $this->useJS() ) {
-            $this->jsonResponse = file_get_contents($this->queryString); // pure server response
-            $this->objectResponse = json_decode($this->jsonResponse); // decode as object
-            $this->live_video_id = ( isset($this->objectResponse->items[0]->id->videoId) ? $this->objectResponse->items[0]->id->videoId : '' );
-        } else {
-            if ( ! wp_next_scheduled( 'wunrav-youtube-hook' ) ) {
-                wp_schedule_event( time(), 'wunrav-30seconds', 'wunrav-youtube-hook' );
+            $this->queryData = array(
+                "part" => $this->part,
+                "channelId" => $this->getChannel()['channelID'],
+                "key" => $this->getChannel()['apiKey'],
+                "eventType" => $this->eventType,
+                "type" => $this->type,
+                "maxResults" => 1,
+            );
+            $this->getQuery = http_build_query($this->queryData); // transform array of data in url query
+            $this->queryString = $this->getAddress . $this->getQuery;
+
+            // querying the YouTube API with either PHP (on page) load or JS (using WP cron)
+            if ( ! $this->useJS() ) {
+                $this->jsonResponse = file_get_contents($this->queryString); // pure server response
+                $this->objectResponse = json_decode($this->jsonResponse); // decode as object
+                $this->live_video_id = ( isset($this->objectResponse->items[0]->id->videoId) ? $this->objectResponse->items[0]->id->videoId : '' );
+            } else {
+                if ( ! wp_next_scheduled( 'wunrav-youtube-hook' ) ) {
+                    wp_schedule_event( time(), 'wunrav-30seconds', 'wunrav-youtube-hook' );
+                }
+
+                add_action( 'wunrav-youtube-hook', array($this, 'doWPCron') );
             }
-
-            add_action( 'wunrav-youtube-hook', array($this, 'doWPCron') );
-        }
+        } else {
+            return;
+        } // we need the API key and chanel to do anything
     }
 
     public function isLive()
