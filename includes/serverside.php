@@ -70,7 +70,9 @@ class WunravEmbedYoutubeLiveStreaming
 
         echo '<div class="wrap">';
         echo '<h1>YouTube Auto Live Embed</h1>';
-        echo '<p>To use this plugin, just place the <code>[youtube-live]</code> shortcode in the page or post you would like your live feed to appear. Instructions on <a href="">how to setup this plugin</a> are available on GitHub.</p>';
+        echo '<p>To use this plugin, just place the <code>[youtube-live]</code> shortcode in the page or post you would like your live feed to appear. Instructions on <a href="https://github.com/webunraveling/wunrav-youtube-live-embed">how to setup this plugin</a> are available on GitHub.</p>';
+
+        // notify user when testing is enabled
         if ( $this->isTesting() ) {
             echo '<h2 style="color:red;">NOTE: Your testing account '  . ( $this->isTesting() == 2 ? 'and debugging are both' : 'is' ) . ' enabled.</h2>';
         }
@@ -103,7 +105,7 @@ class WunravEmbedYoutubeLiveStreaming
 
         add_settings_field(
             'alertTitle',
-            'Header / Title',
+            'Header / Title <span class="required">*</span>',
             array($this, 'alertTitle_callback'),
             $this->pluginSlug, // page
             $this->pluginSlug . '-settings-customization' //section
@@ -119,7 +121,7 @@ class WunravEmbedYoutubeLiveStreaming
 
         add_settings_field(
             'alertBtn',
-            'Button Text',
+            'Button Text <span class="required">*</span>',
             array($this, 'alertBtn_callback'),
             $this->pluginSlug, //page
             $this->pluginSlug . '-settings-customization' //section
@@ -127,7 +129,7 @@ class WunravEmbedYoutubeLiveStreaming
 
         add_settings_field(
             'alertBtnURL',
-            'Button URL',
+            'Button URL <span class="required">*</span>',
             array($this, 'alertBtnURL_callback'),
             $this->pluginSlug, //page
             $this->pluginSlug . '-settings-customization' //section
@@ -172,7 +174,7 @@ class WunravEmbedYoutubeLiveStreaming
 
         add_settings_field(
             'channelID',
-            'Channel ID',
+            'Channel ID <span class="required">*</span>',
             array($this, 'channelID_callback'),
             $this->pluginSlug, // page
             $this->pluginSlug . '-settings-production' // section
@@ -180,8 +182,8 @@ class WunravEmbedYoutubeLiveStreaming
 
         add_settings_field(
             'apiKey', // ID (in form I think)
-            'API Key', // Title
-            array($this, 'apiKey_callback'), // callback
+            'API Key <span class="required">*</span>',
+            array($this, 'apiKey_callback'),
             $this->pluginSlug, // page
             $this->pluginSlug . '-settings-production' // section
         );
@@ -314,7 +316,7 @@ class WunravEmbedYoutubeLiveStreaming
     public function alertTitle_callback()
     {
         printf(
-            '<input type="text" id="alertTitle" name="' . $this->pluginSlug . '_settings[alertTitle]" value="%s" size="60" maxlength="500" />',
+            '<input type="text" id="alertTitle" name="' . $this->pluginSlug . '_settings[alertTitle]" value="%s" size="60" maxlength="500" required />',
             isset( $this->options['alertTitle'] ) ? esc_attr( $this->options['alertTitle']) : ''
         );
     }
@@ -330,7 +332,7 @@ class WunravEmbedYoutubeLiveStreaming
     public function alertBtn_callback()
     {
         printf(
-            '<input type="text" id="alertBtn" name="' . $this->pluginSlug . '_settings[alertBtn]" value="%s" size="60" maxlength="500" />',
+            '<input type="text" id="alertBtn" name="' . $this->pluginSlug . '_settings[alertBtn]" value="%s" size="60" maxlength="500" required />',
             isset( $this->options['alertBtn'] ) ? esc_attr( $this->options['alertBtn']) : ''
         );
     }
@@ -338,7 +340,7 @@ class WunravEmbedYoutubeLiveStreaming
     public function alertBtnURL_callback()
     {
         printf(
-            '<input type="text" id="alertBtnURL" name="' . $this->pluginSlug . '_settings[alertBtnURL]" value="%s" size="60" maxlength="800" placeholder="must start with http:// or https://" />',
+            '<input type="text" id="alertBtnURL" name="' . $this->pluginSlug . '_settings[alertBtnURL]" value="%s" size="60" maxlength="800" placeholder="must start with http:// or https://" required />',
             isset( $this->options['alertBtnURL'] ) ? esc_attr( $this->options['alertBtnURL']) : ''
         );
     }
@@ -362,7 +364,7 @@ class WunravEmbedYoutubeLiveStreaming
     public function channelID_callback()
     {
         printf(
-            '<input type="text" id="channelID" name="' . $this->pluginSlug . '_settings[channelID]" value="%s" size="60" maxlength="24" />',
+            '<input type="text" id="channelID" name="' . $this->pluginSlug . '_settings[channelID]" value="%s" size="60" maxlength="24" required />',
             isset( $this->options['channelID'] ) ? esc_attr( $this->options['channelID']) : ''
         );
     }
@@ -370,7 +372,7 @@ class WunravEmbedYoutubeLiveStreaming
     public function apiKey_callback()
     {
         printf(
-            '<input type="text" id="apiKey" name="' . $this->pluginSlug .'_settings[apiKey]" value="%s" size="60" maxlength="39" />',
+            '<input type="text" id="apiKey" name="' . $this->pluginSlug .'_settings[apiKey]" value="%s" size="60" maxlength="39" required />',
             isset( $this->options['apiKey'] ) ? esc_attr( $this->options['apiKey']) : ''
         );
     }
@@ -505,6 +507,18 @@ class WunravEmbedYoutubeLiveStreaming
 
     public function queryIt()
     {
+
+        // check that we have required fields before trying to query the API
+        if ( ! isset($this->options['alertTitle']) ||
+             ! isset($this->options['alertBtn']) ||
+             ! isset($this->options['alertBtnURL']) ||
+             ! isset($this->options['channelID']) ||
+             ! isset($this->options['apiKey']) ){
+
+                 $this->errorNotice('Please fill in the required fields for the YouTube Live Auto Embed plugin.');
+
+        }
+
         $this->queryData = array(
             "part" => $this->part,
             "channelId" => $this->getChannel()['channelID'],
@@ -595,6 +609,17 @@ class WunravEmbedYoutubeLiveStreaming
                 wp_enqueue_script('wunrav-youtube-live-embed-jquery', plugins_url('wunrav-youtube-live-embed/includes/jquery-3.3.1.min.js'), __FILE__);
             }
         }
+    }
+
+    public function errorNotice( $message = null ) {
+
+        if ( null == message) {
+            $err = '<div class="error notice">Function errorNotice() is expecting a message to return.</div>';
+        } else {
+            $err = '<div class="error notice">' . $message . '</div>';
+        }
+
+        return $err;
     }
 
     public function deactivate()
