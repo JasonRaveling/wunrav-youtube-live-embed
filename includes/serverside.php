@@ -33,6 +33,7 @@ class WunravEmbedYoutubeLiveStreaming
 
     public $options; // options entered into wp-admin form
 
+
     public function __construct()
     {
         register_deactivation_hook( __FILE__, array($this, 'deactivate') );
@@ -43,6 +44,8 @@ class WunravEmbedYoutubeLiveStreaming
         add_action( 'admin_menu', array($this, 'admin_menu_init') );
         add_action( 'admin_init', array($this, 'admin_page_init') );
         add_filter( 'cron_schedules', array($this, 'addWPCronSchedule') );
+
+        $this->options = get_option( $this->pluginSlug . '_settings' );
 
         $this->queryIt();
     }
@@ -66,8 +69,6 @@ class WunravEmbedYoutubeLiveStreaming
     // create the admin page layout
     public function admin_page_create()
     {  
-        $this->options = get_option( $this->pluginSlug . '_settings' );
-
         echo '<div class="wrap">';
         echo '<h1>YouTube Auto Live Embed</h1>';
         echo '<p>To use this plugin, just place the <code>[youtube-live]</code> shortcode in the page or post you would like your live feed to appear. Instructions on <a href="https://github.com/webunraveling/wunrav-youtube-live-embed">how to setup this plugin</a> are available on GitHub.</p>';
@@ -515,7 +516,7 @@ class WunravEmbedYoutubeLiveStreaming
              ! isset($this->options['channelID']) ||
              ! isset($this->options['apiKey']) ){
 
-                 echo $this->errorNotice('Please fill in the required fields for the <a href="/wp-admin/options-general.php?page=wunrav-youtube-live-embed">YouTube Live Auto Embed plugin</a>. The plugin will not work until all required fields are entered.');
+                 echo $this->errorNotice('Please fill in the required fields for the <a href="/wp-admin/options-general.php?page=wunrav-youtube-live-embed">YouTube Live Auto Embed plugin</a>. The plugin will not work until all required fields are entered.' . $this->options['alertTitle'] . '; ' . $this->options['alertBtn']);
 
                  return;
 
