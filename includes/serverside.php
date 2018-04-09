@@ -615,6 +615,8 @@ class WunravEmbedYoutubeLiveStreaming
 
     public function errorNotice( $message = null ) {
 
+        if ( ! is_admin() ) { return; }
+
         if ( null == $message) {
             $err = '<div class="error notice">Function errorNotice() is expecting a message to return.</div>';
         } else {
