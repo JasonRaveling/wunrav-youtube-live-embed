@@ -515,7 +515,9 @@ class WunravEmbedYoutubeLiveStreaming
              ! isset($this->options['channelID']) ||
              ! isset($this->options['apiKey']) ){
 
-                 $this->errorNotice('Please fill in the required fields for the YouTube Live Auto Embed plugin.');
+                 echo $this->errorNotice('Please fill in the required fields for the <a href="/wp-admin/options-general.php?page=wunrav-youtube-live-embed">YouTube Live Auto Embed plugin</a>. The plugin will not work until all required fields are entered.');
+
+                 return;
 
         }
 
@@ -613,7 +615,7 @@ class WunravEmbedYoutubeLiveStreaming
 
     public function errorNotice( $message = null ) {
 
-        if ( null == message) {
+        if ( null == $message) {
             $err = '<div class="error notice">Function errorNotice() is expecting a message to return.</div>';
         } else {
             $err = '<div class="error notice">' . $message . '</div>';
